@@ -15,6 +15,7 @@ public class TagServiceImpl implements TagService {
 
     private final EntityManager em;
 
+    private final TagMapper mapper;
     @Override
     public Integer saveOrUpdate(TagRequestDto tagPayload) {
         QTag qtag = QTag.tag;

@@ -1,30 +1,36 @@
 package com.cs.home.post;
 
+import com.cs.home.tag.Tag;
+import com.cs.home.tag.TagService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Service
+@RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-    public String name;
-
-    public PostServiceImpl(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
-
-    public PostResponseDto get() {
-        Long id = 1234L;
-        Post order = postRepository.getReferenceById(id);
-        return new PostResponseDto("hello");
-    }
+    private final TagService tagService;
+    private final PostMapper postMapper;
 
     @Override
-    public String getName() {
-        return this.name;
-    }
+    @Transactional
+    public PostDto save(PostDto postDto) {
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
+        Post post = postMapper.mapping(postDto);
+        Set<Tag> tags = new HashSet<>();
+        for (Integer tagId : postDto.getTags()) {
+            Tag tag = new Tag();
+            tag.setId(tagId);
+            tags.add(tag);
+        }
+        post.setTags(tags);
+        return postMapper.mapping(postRepository.save(post));
+
     }
 }

@@ -1,8 +1,12 @@
 package com.cs.home.tag;
 
 
+import java.util.List;
+
 public interface TagService {
 
 
-    Integer saveOrUpdate(TagRequestDto tagPayload);
+    TagDto saveOrUpdate(TagDto tagPayload);
+
+    List<TagDto> saveOrUpdateAll(List<TagDto> tagPayload);
 }

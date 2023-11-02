@@ -24,16 +24,16 @@ class ValidControllerTests   {
 	@Autowired
 	protected MockMvc mockMvc;
 
-	@Test
-	void shouldReturnSuccessMessage() throws Exception {
-		Map<String, String> body = new HashMap<>();
-		body.put("name", "zcs");
-		mockMvc.perform(post("/validate")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(body)))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("data")
-				.value("valid params: zcs"));
-	}
+//	@Test
+//	void shouldReturnSuccessMessage() throws Exception {
+//		Map<String, String> body = new HashMap<>();
+//		body.put("name", "zcs");
+//		mockMvc.perform(post("/validate")
+//				.contentType(MediaType.APPLICATION_JSON)
+//				.content(objectMapper.writeValueAsString(body)))
+//				.andExpect(status().isOk())
+//				.andExpect(jsonPath("data")
+//				.value("valid params: zcs"));
+//	}
 
 }

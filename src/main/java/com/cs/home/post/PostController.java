@@ -1,10 +1,10 @@
 package com.cs.home.post;
 
+import com.cs.home.common.Response;
+import com.cs.home.common.ValidationGroup;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
 
 
-    private PostService os1;
+    private final PostService postService;
 
 
-    @GetMapping("/order")
-    public PostResponseDto list() {
-        return os1.get();
+    @PostMapping("/save")
+    public Response<PostDto> save(@Validated(ValidationGroup.Create.class) @RequestBody PostDto postDto) {
+        return Response.create(postService.save(postDto));
     }
+
+
 }

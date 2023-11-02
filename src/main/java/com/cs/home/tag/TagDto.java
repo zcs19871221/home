@@ -6,7 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 
 @Data
-public class TagRequestDto {
+public class TagDto {
     @NotBlank
     private String name;
 

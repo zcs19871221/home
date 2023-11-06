@@ -15,7 +15,7 @@ public class Tag {
     @Column(unique = true, nullable = false)
     private int id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "tags")

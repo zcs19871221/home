@@ -25,4 +25,5 @@ public class TagServiceImpl implements TagService {
         List<Tag> tags = tagMapper.mapping(tagPayloads);
         return tagMapper.daoToDto(tagRepository.saveAll(tags));
     }
+
 }

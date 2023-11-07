@@ -2,9 +2,9 @@ spring:
   jpa:
     database-platform: "${DB_DIALECT:org.hibernate.dialect.MySQL8Dialect}"
     show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
+#    generate-ddl: true
+#    hibernate:
+#      ddl-auto: update
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/db_example?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8&autoReconnect=true
     username: springuser
@@ -13,5 +13,6 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-catalog:
-  name: hello
+  liquibase:
+    change-log: classpath:/db/changelog.yaml
+

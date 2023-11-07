@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    database-platform: "${DB_DIALECT:org.hibernate.dialect.MySQLDialect}"
+    show-sql: true
+#    generate-ddl: true
+#    hibernate:
+#      ddl-auto: update
+  datasource:
+    url: jdbc:h2:mem:test;MODE=MySQL;
+#    username: sa
+#    password: sa
+    driver-class-name: org.h2.Driver
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  liquibase:
+    change-log: classpath:/db/changelog.yaml
+

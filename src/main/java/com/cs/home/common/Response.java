@@ -11,7 +11,12 @@ public class Response<T> implements Serializable {
     private Response(T data) {
         this.data = data;
     }
+
     public static <T> Response<T> create(T data) {
         return new Response<T>(data);
+    }
+
+    public static Response<String> EmptyResponse() {
+        return new Response<>("");
     }
 }

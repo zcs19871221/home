@@ -11,12 +11,15 @@ import java.util.Set;
 @Data
 public class Post {
     @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
     private int id;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String content;
+
+    @Column(unique = true, nullable = false)
+    private String name;
 
     private Date lastModifiedTime;
 
@@ -26,4 +29,7 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags;
+
+    @Version
+    private Long version;
 }

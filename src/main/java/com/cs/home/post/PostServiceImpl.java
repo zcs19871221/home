@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -21,7 +22,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostPayload save(PostPayload postPayload) {
+    public PostResponse save(PostPayload postPayload) {
 
         Post post = postMapper.mapping(postPayload);
 
@@ -33,6 +34,25 @@ public class PostServiceImpl implements PostService {
         }
         post.setTags(tags);
         return postMapper.mapping(postRepository.save(post));
+    }
+
+    @Override
+    public PostResponse get(Integer id) {
+        return null;
+    }
+
+    @Override
+    public List<PostResponse> getAll() {
+        return null;
+    }
+
+    @Override
+    public PostResponse update(Integer id, PostPayload postPayload) {
+        return null;
+    }
+
+    @Override
+    public void Delete(Integer id) {
 
     }
 }

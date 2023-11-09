@@ -1,35 +1,17 @@
 package com.cs.home.post;
 
-import com.cs.home.tag.Tag;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.HashSet;
-import java.util.Set;
-
-@Mapper
+@Mapper(unmappedSourcePolicy = ReportingPolicy.IGNORE, unmappedTargetPolicy =
+        ReportingPolicy.IGNORE)
 public interface PostMapper {
 
+    @Mapping(target = "tags", expression = "java(new java.util.HashSet<>())")
     Post mapping(PostPayload postPayload);
 
-    PostPayload mapping(Post post);
-
-    default Set<Tag> TagIdToTags(Set<Integer> tags) {
-        Set<Tag> ans = new HashSet<>();
-        for (Integer tagId : tags) {
-            Tag tag = new Tag();
-            tag.setId(tagId);
-            ans.add(tag);
-        }
-        return ans;
-    }
-
-    default Set<Integer> TagsToTagId(Set<Tag> tags) {
-        Set<Integer> ans = new HashSet<>();
-        for (Tag tag : tags) {
-            ans.add(tag.getId());
-        }
-        return ans;
-    }
-
+    PostResponse mapping(Post post);
 
 }
+

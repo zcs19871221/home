@@ -14,6 +14,7 @@ public class TagServiceImpl implements TagService {
 
     private final TagMapper tagMapper;
 
+
     @Override
     @Transactional
     public TagResponse create(TagPayload tagPayload) {
@@ -35,11 +36,11 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @Transactional
     public TagResponse update(int id, TagPayload tagPayload) {
         Tag tag = tagRepository.getReferenceById(id);
         tagMapper.updateEntity(tagPayload, tag);
-        TagResponse result = tagMapper.mapping(tagRepository.save(tag));
-        return result;
+        return tagMapper.mapping(tagRepository.save(tag));
     }
 
 

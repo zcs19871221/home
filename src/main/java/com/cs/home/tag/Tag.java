@@ -1,13 +1,15 @@
 package com.cs.home.tag;
 
 import com.cs.home.post.Post;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class Tag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

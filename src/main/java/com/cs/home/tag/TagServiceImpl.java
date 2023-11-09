@@ -16,7 +16,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
-    public TagDto create(TagDto tagPayload) {
+    public TagResponse create(TagPayload tagPayload) {
         Tag tag = tagMapper.mapping(tagPayload);
         return tagMapper.mapping(tagRepository.save(tag));
     }
@@ -29,16 +29,17 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public List<TagDto> findAll() {
+    public List<TagPayload> findAll() {
         List<Tag> tags = tagRepository.findAll();
         return tagMapper.mapping(tags);
     }
 
     @Override
-    public TagDto update(TagDto tagPayload) {
-        Tag tag = tagRepository.getReferenceById(tagPayload.getId());
-        tagMapper.updateEntity(tagMapper.mapping(tagPayload), tag);
-        return tagMapper.mapping(tagRepository.save(tag));
+    public TagResponse update(int id, TagPayload tagPayload) {
+        Tag tag = tagRepository.getReferenceById(id);
+        tagMapper.updateEntity(tagPayload, tag);
+        TagResponse result = tagMapper.mapping(tagRepository.save(tag));
+        return result;
     }
 
 

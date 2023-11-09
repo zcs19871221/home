@@ -30,16 +30,11 @@ class BaseIntegrationTest {
 
 
     protected ResultActions myPost(String url, String[][] body) throws Exception {
-        url = initUrl(url);
-        Map<String, String> requestBody = new HashMap<>();
-        for (String[] strings : body) {
-            String key = strings[0];
-            String value = strings[1];
-            requestBody.put(key, value);
-        }
-        return mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody)));
+        return postOrPut(url, body, true);
+    }
+
+    protected ResultActions myPut(String url, String[][] body) throws Exception {
+        return postOrPut(url, body, false);
     }
 
     protected ResultActions myDelete(String url) throws Exception {
@@ -64,5 +59,26 @@ class BaseIntegrationTest {
         }
         return formatedUrl;
     }
+
+    protected ResultActions postOrPut(String url, String[][] body,
+                                      boolean isPost) throws Exception {
+        url = initUrl(url);
+        Map<String, String> requestBody = new HashMap<>();
+        for (String[] strings : body) {
+            String key = strings[0];
+            String value = strings[1];
+            requestBody.put(key, value);
+        }
+        if (isPost) {
+            return mockMvc.perform(post(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestBody)));
+        }
+
+        return mockMvc.perform(put(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody)));
+    }
+
 
 }

@@ -7,13 +7,13 @@ import java.util.List;
 
 @Mapper
 public interface TagMapper {
-    Tag mapping(TagDto tagDto);
+    Tag mapping(TagPayload tagPayload);
 
 
-    TagDto mapping(Tag tagDto);
+    TagResponse mapping(Tag tag);
 
-    List<TagDto> mapping(List<Tag> tags);
+    List<TagPayload> mapping(List<Tag> tags);
 
-    void updateEntity(Tag tag, @MappingTarget Tag target);
+    void updateEntity(TagPayload tagPayload, @MappingTarget Tag target);
 
 }

@@ -6,11 +6,11 @@ import java.util.List;
 public interface TagService {
 
 
-    TagDto create(TagDto tagPayload);
+    TagResponse create(TagPayload tagPayload);
 
     void delete(Integer id);
 
-    List<TagDto> findAll();
+    List<TagPayload> findAll();
 
-    TagDto update(TagDto tagPayload);
+    TagResponse update(int id, TagPayload tagPayload);
 }

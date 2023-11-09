@@ -1,10 +1,8 @@
 package com.cs.home.tag;
 
 import com.cs.home.common.Response;
-import com.cs.home.common.ValidationGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -20,15 +18,15 @@ public class TagController {
     private final TagService tagService;
 
     @PostMapping
-    public Response<TagDto> createTag(@Valid @RequestBody TagDto tagPayload) {
+    public Response<TagResponse> createTag(@Valid @RequestBody TagPayload tagPayload) {
         log.info("POST /api/tags ${}", tagPayload.getName());
         return Response.create(tagService.create(tagPayload));
     }
 
-    @PutMapping
-    public Response<TagDto> updateTag(@Validated(ValidationGroup.Update.class) @RequestBody TagDto tagPayload) {
+    @PutMapping(path = "/{id}")
+    public Response<TagResponse> updateTag(@Valid @RequestBody TagPayload tagPayload, @PathVariable int id) {
         log.info("PUT /api/tags ${}", tagPayload.getName());
-        return Response.create(tagService.update(tagPayload));
+        return Response.create(tagService.update(id, tagPayload));
     }
 
     @DeleteMapping(path = "/{id}")
@@ -39,7 +37,7 @@ public class TagController {
     }
 
     @GetMapping
-    public Response<List<TagDto>> findAll() {
+    public Response<List<TagPayload>> findAll() {
         log.info("GET /api/tags");
         return Response.create(tagService.findAll());
     }

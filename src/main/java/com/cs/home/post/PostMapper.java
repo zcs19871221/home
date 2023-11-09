@@ -9,9 +9,9 @@ import java.util.Set;
 @Mapper
 public interface PostMapper {
 
-    Post mapping(PostDto postDto);
+    Post mapping(PostPayload postPayload);
 
-    PostDto mapping(Post post);
+    PostPayload mapping(Post post);
 
     default Set<Tag> TagIdToTags(Set<Integer> tags) {
         Set<Tag> ans = new HashSet<>();

@@ -1,5 +1,6 @@
 package com.cs.home;
 
+import com.cs.home.tag.TagPayload;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,40 +14,38 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class TagTests extends BaseIntegrationTest {
 
-    @BeforeEach
-    void cleanTable() {
-        JdbcTestUtils.deleteFromTables(jdbcTemplate, "tag");
+    public static TagPayload create() {
+        return TagPayload.builder().name("算法").build();
     }
 
 
+    @BeforeEach
+    void cleanTable() {
+        JdbcTestUtils.deleteFromTables(jdbcTemplate, "post_tag", "post",
+                "tag");
+    }
+
     @Test
     void shouldCreateTagSuccessful() throws Exception {
-
-        myPost("/tags", new String[][]{new String[]{"name", "算法"}})
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("data.name")
-                        .value("算法"))
-                .andExpect(jsonPath("data.id").isNumber());
-        myPost("/tags", new String[][]{new String[]{"name", "算法"}}).andExpect(status().is4xxClientError());
+        TagPayload tagPayload = create();
+        save(tagPayload);
     }
 
     @Test
     void shouldDisplayErrorMessageWhenDuplicateName() throws Exception {
+        TagPayload tagPayload = create();
 
-        myPost("/tags", new String[][]{new String[]{"name", "算法"}})
+        myPost("/tags", tagPayload)
                 .andExpect(status().isOk());
 
-        myPost("/tags", new String[][]{new String[]{"name", "算法"}}).andExpect(status().is4xxClientError());
+        myPost("/tags", tagPayload).andExpect(status().is4xxClientError());
     }
 
     @Test
     void shouldDeleteSuccessful() throws Exception {
-        MvcResult result = myPost("/tags", new String[][]{new String[]{"name",
-                "算法"}})
-                .andExpect(status().isOk()).andExpect(jsonPath("data.id").isNumber()).andReturn();
+        TagPayload tagPayload = create();
 
-        String response = result.getResponse().getContentAsString();
-        Integer id = JsonPath.parse(response).read("data.id");
+        Integer id = save(tagPayload);
 
         myGet("/tags").andExpect(jsonPath("data", hasSize(1)));
 
@@ -57,31 +56,36 @@ class TagTests extends BaseIntegrationTest {
 
     @Test
     void shouldReturnErrorMessagesWithInvalidPayload() throws Exception {
-        myPost("/tags", new String[][]{new String[]{"name",
-                ""}}).andExpect(status().is4xxClientError()).andExpect(jsonPath("data", containsString("'name' must not be blank")));
+
+        TagPayload tagPayload = create();
+        tagPayload.setName("");
+        myPost("/tags", tagPayload).andExpect(status().is4xxClientError()).andExpect(jsonPath("data", containsString("'name' must not be blank")));
 
 
-        myPost("/tags", new String[][]{new String[]{"name",
-                "r".repeat(51)}}).andExpect(status().is4xxClientError()).andExpect(jsonPath("data", containsString("50")));
+        tagPayload.setName("r".repeat(51));
+        myPost("/tags", tagPayload).andExpect(status().is4xxClientError()).andExpect(jsonPath("data", containsString("50")));
 
     }
 
     @Test
     void shouldUpdateSuccessful() throws Exception {
-        MvcResult result = myPost("/tags", new String[][]{new String[]{"name",
-                "算法"}})
+        TagPayload tagPayload = create();
+
+        Integer id = save(tagPayload);
+
+
+        tagPayload.setName("随笔");
+        myPut("/tags" + "/" + id, tagPayload).andExpect(status().isOk());
+
+        myGet("/tags").andExpect(jsonPath("data[0].name", is("随笔")));
+    }
+
+    public Integer save(TagPayload tagPayload) throws Exception {
+        MvcResult result = myPost("/tags", tagPayload)
                 .andExpect(status().isOk()).andExpect(jsonPath("data.id").isNumber()).andReturn();
 
         String response = result.getResponse().getContentAsString();
-        Integer id = JsonPath.parse(response).read("data.id");
-
-        myPut("/tags" + "/" + id, new String[][]{new String[]{"name",
-                "随笔"}}).andExpect(status().isOk());
-
-        myGet("/tags").andExpect(jsonPath("data[0].name", is("随笔")));
-
-
+        return JsonPath.parse(response).read("data.id");
     }
-
 
 }

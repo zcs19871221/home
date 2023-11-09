@@ -18,6 +18,7 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
 1. 每个接口应该有对应的dto（Request，Response），create和update的request
    payload可以考虑共用，把id放到path里。
 2. 不可变的：private final Type xxxx;
+3. 使用lombok的builder可以方便测试快速创建对象，但是要搭配
 
 ## MapStruct
 

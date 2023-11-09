@@ -8,7 +8,7 @@ import javax.validation.Valid;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping(path = "/posts")
+@RequestMapping(path = "/api/posts")
 public class PostController {
 
 

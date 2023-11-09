@@ -10,9 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @SpringBootTest
@@ -28,13 +25,38 @@ class BaseIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
-
-    protected ResultActions myPost(String url, String[][] body) throws Exception {
-        return postOrPut(url, body, true);
+    private static String initUrl(String url) {
+        String formatedUrl = url;
+        if (!formatedUrl.startsWith("/")) {
+            formatedUrl = "/" + url;
+        }
+        if (!formatedUrl.startsWith("/api")) {
+            formatedUrl = "/api" + url;
+        }
+        return formatedUrl;
     }
 
-    protected ResultActions myPut(String url, String[][] body) throws Exception {
+    protected ResultActions myPut(String url, Object body) throws Exception {
         return postOrPut(url, body, false);
+    }
+
+    protected ResultActions postOrPut(String url, Object body,
+                                      boolean isPost) throws Exception {
+        url = initUrl(url);
+
+        if (isPost) {
+            return mockMvc.perform(post(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(body)));
+        }
+
+        return mockMvc.perform(put(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)));
+    }
+
+    protected ResultActions myPost(String url, Object body) throws Exception {
+        return postOrPut(url, body, true);
     }
 
     protected ResultActions myDelete(String url) throws Exception {
@@ -47,37 +69,6 @@ class BaseIntegrationTest {
         url = initUrl(url);
         return mockMvc.perform(get(url)
                 .contentType(MediaType.APPLICATION_JSON));
-    }
-
-    private String initUrl(String url) {
-        String formatedUrl = url;
-        if (!formatedUrl.startsWith("/")) {
-            formatedUrl = "/" + url;
-        }
-        if (!formatedUrl.startsWith("/api")) {
-            formatedUrl = "/api" + url;
-        }
-        return formatedUrl;
-    }
-
-    protected ResultActions postOrPut(String url, String[][] body,
-                                      boolean isPost) throws Exception {
-        url = initUrl(url);
-        Map<String, String> requestBody = new HashMap<>();
-        for (String[] strings : body) {
-            String key = strings[0];
-            String value = strings[1];
-            requestBody.put(key, value);
-        }
-        if (isPost) {
-            return mockMvc.perform(post(url)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestBody)));
-        }
-
-        return mockMvc.perform(put(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestBody)));
     }
 
 

@@ -1,11 +1,17 @@
 package com.cs.home.post;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.Size;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@Builder
+@Jacksonized
 public class PostPayload {
     @Size(min = 1, max = 50)
     private String name;

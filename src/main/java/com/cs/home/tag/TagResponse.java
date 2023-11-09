@@ -1,9 +1,13 @@
 package com.cs.home.tag;
 
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class TagResponse {
     Integer id;
 

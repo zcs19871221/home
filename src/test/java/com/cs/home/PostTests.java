@@ -27,16 +27,26 @@ class PostTests extends BaseIntegrationTest {
 
     @Test
     void shouldCreatePostSuccessful() throws Exception {
-        TagPayload tagPayload = TagTests.create();
 
+        TagPayload tagPayload = TagTests.create();
         MvcResult result = myPost("/tags", tagPayload)
                 .andExpect(status().isOk()).andExpect(jsonPath("data.id").isNumber()).andReturn();
 
         String response = result.getResponse().getContentAsString();
         Integer tagId = JsonPath.parse(response).read("data.id");
 
+        TagPayload tagPayload2 = TagTests.create();
+        tagPayload2.setName("随笔");
+        MvcResult result2 = myPost("/tags", tagPayload2)
+                .andExpect(status().isOk()).andExpect(jsonPath("data.id").isNumber()).andReturn();
+
+        String response2 = result2.getResponse().getContentAsString();
+        Integer tagId2 = JsonPath.parse(response2).read("data.id");
+
+
         Set<Integer> tags = new HashSet<>();
         tags.add(tagId);
+        tags.add(tagId2);
         PostPayload postPayload = PostPayload.builder().name("标题").content(
                 "正文").tags(tags).build();
 
@@ -45,8 +55,10 @@ class PostTests extends BaseIntegrationTest {
                 .andExpect(jsonPath("data.name")
                         .value("标题"))
                 .andExpect(jsonPath("data.content").value("正文"))
-                .andExpect(jsonPath("data.tags", hasSize(1)))
-                .andExpect(jsonPath("data.tags[0].name").value("算法"));
+                .andExpect(jsonPath("data.tags", hasSize(2)))
+                .andExpect(jsonPath("data.tags[0].name").value("算法"))
+                .andExpect(jsonPath("data.tags[1].name").value("随笔"));
+
     }
 
 

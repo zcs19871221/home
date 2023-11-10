@@ -12,7 +12,7 @@ public interface TagMapper {
 
     TagResponse mapping(Tag tag);
 
-    List<TagPayload> mapping(List<Tag> tags);
+    List<TagResponse> mapping(List<Tag> tags);
 
     void updateEntity(TagPayload tagPayload, @MappingTarget Tag target);
 

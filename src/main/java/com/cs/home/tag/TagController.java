@@ -37,7 +37,7 @@ public class TagController {
     }
 
     @GetMapping
-    public Response<List<TagPayload>> findAll() {
+    public Response<List<TagResponse>> findAll() {
         log.info("GET /api/tags");
         return Response.create(tagService.findAll());
     }

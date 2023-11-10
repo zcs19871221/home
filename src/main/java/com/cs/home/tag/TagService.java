@@ -10,7 +10,7 @@ public interface TagService {
 
     void delete(Integer id);
 
-    List<TagPayload> findAll();
+    List<TagResponse> findAll();
 
     TagResponse update(int id, TagPayload tagPayload);
 }

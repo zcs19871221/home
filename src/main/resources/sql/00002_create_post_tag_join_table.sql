@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset chengsi:create post tag join table
+--changeset Chengsi:create post tag join table
 create table post_tag
 (
     post_id int not null,

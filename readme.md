@@ -47,3 +47,9 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
 
 jpa和entityManger是标准，session是hibernate对entityManger的实现，JpaRepository是spring
 对jpa的抽象
+
+# 时区，时间
+
+![时间 时区](timezone.jpg)
+
+      SET GLOBAL time_zone = '+0:00';

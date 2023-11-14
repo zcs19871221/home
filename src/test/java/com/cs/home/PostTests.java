@@ -3,10 +3,12 @@ package com.cs.home;
 import com.cs.home.post.PostPayload;
 import com.cs.home.tag.TagPayload;
 import com.jayway.jsonpath.JsonPath;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +28,7 @@ class PostTests extends BaseIntegrationTest {
 
 
     @Test
+    @Transactional
     void shouldCreatePostSuccessful() throws Exception {
 
         TagPayload tagPayload = TagTests.create();
@@ -56,9 +59,7 @@ class PostTests extends BaseIntegrationTest {
                         .value("标题"))
                 .andExpect(jsonPath("data.content").value("正文"))
                 .andExpect(jsonPath("data.tags", hasSize(2)))
-                .andExpect(jsonPath("data.tags[0].name").value("算法"))
-                .andExpect(jsonPath("data.tags[1].name").value("随笔"));
-
+                .andExpect(jsonPath("data.tags[*].name", Matchers.containsInAnyOrder("算法", "随笔")));
     }
 
 

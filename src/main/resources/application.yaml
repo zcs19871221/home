@@ -12,4 +12,11 @@ spring:
       matching-strategy: ant_path_matcher
   liquibase:
     change-log: classpath:/changelog.yaml
+  jackson:
+    deserialization:
+      read-date-timestamps-as-nanoseconds: false
+    serialization:
+      write-date-timestamps-as-nanoseconds: false
+      write-dates-as-timestamps: true
+
 

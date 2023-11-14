@@ -5,7 +5,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Entity
 @Getter
@@ -17,5 +17,5 @@ public class DateTime {
     private Integer id;
 
     @NotNull
-    private OffsetDateTime dateTime;
+    private Instant dateTime;
 }

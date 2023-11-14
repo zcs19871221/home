@@ -1,19 +1,16 @@
 package com.cs.home.tag;
 
 
+import com.cs.home.common.AuditableResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.time.OffsetDateTime;
-
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class TagResponse {
-    Integer id;
+public class TagResponse extends AuditableResponse {
+    private Integer id;
 
-    String name;
-
-    OffsetDateTime createdAt;
+    private String name;
 }

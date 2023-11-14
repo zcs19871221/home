@@ -22,6 +22,6 @@ public class DateTimeController {
     @GetMapping("/{id}")
     Response<QueriedDateTimeResponse> get(@PathVariable Integer id,
                                           @RequestParam ZoneId zone) {
-        return Response.create(dateTimeService.get(id));
+        return Response.create(dateTimeService.get(id, zone));
     }
 }

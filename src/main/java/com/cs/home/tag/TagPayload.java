@@ -18,5 +18,5 @@ import javax.validation.constraints.Size;
 public class TagPayload {
     @NotBlank
     @Size(max = 50)
-    String name;
+    private String name;
 }

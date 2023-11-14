@@ -3,6 +3,8 @@ package com.cs.home.dateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
+
 @Service
 @RequiredArgsConstructor
 public class DateTimeServiceImpl implements DateTimeService {
@@ -17,7 +19,10 @@ public class DateTimeServiceImpl implements DateTimeService {
         return dateTimeMapper.mappingToSavedDateTimeResponse(dateTime);
     }
 
-    public QueriedDateTimeResponse get(Integer id) {
-        return dateTimeMapper.mapping(dateTimeRepository.getReferenceById(id));
+    public QueriedDateTimeResponse get(Integer id, ZoneId zoneId) {
+        DateTime dateTime = dateTimeRepository.getReferenceById(id);
+        QueriedDateTimeResponse q = dateTimeMapper.mapping(dateTime);
+        q.setZoneId(zoneId);
+        return q;
     }
 }

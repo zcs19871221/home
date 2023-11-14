@@ -12,7 +12,7 @@ import javax.persistence.Column;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
@@ -23,14 +23,16 @@ public abstract class Auditable {
     protected String createdBy;
 
     @CreatedDate
-    @NotNull
     @Column(nullable = false, updatable = false)
-    protected OffsetDateTime createdAt;
+    @NotNull
+    protected Instant createdAt;
+
 
     @LastModifiedBy
     protected String lastModifiedBy;
 
     @LastModifiedDate
-    protected OffsetDateTime lastModifiedAt;
+    @NotNull
+    protected Instant lastModifiedAt;
 
 }

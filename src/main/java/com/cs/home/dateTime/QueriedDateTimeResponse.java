@@ -1,19 +1,18 @@
 package com.cs.home.dateTime;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.Instant;
 import java.time.ZoneId;
 
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
 public class QueriedDateTimeResponse {
 
-    private final Instant time;
-    private final Integer id;
-    private final String zonedDateTime;
+    private Instant dateTime;
+
+    private Integer id;
+
+    private String formattedTime;
+
     private ZoneId zoneId;
 }

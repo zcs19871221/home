@@ -30,6 +30,9 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
         private Long version 
 3. 属性需要添加校验的注解（notBlank，size等），可以获取更清晰的错误信息。
 4. 时间类型设置为 `Instant`
+5. 映射关系的所有者在非`MappedBy`注解标注的表上，也就是在没有标注mappedBy
+   的实体上操作增加和删除，会同步更新连接表关系。如果要在mappedBy
+   的表上操作，必须查出所有拥有该实体的的实体列表，然后移除，保存后，关系会被删除，才能删除自己的实体。
 
 ## MapStruct
 

@@ -1,5 +1,9 @@
 package com.cs.home.tag;
 
+import com.cs.home.post.Post;
+import com.cs.home.post.PostRepository;
+import com.cs.home.post.QPost;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +15,8 @@ import java.util.List;
 public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
+    private final PostRepository postRepository;
+
 
     private final TagMapper tagMapper;
 
@@ -23,6 +29,13 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public void delete(Integer id) {
+        Tag tagToDelete = tagRepository.getReferenceById(id);
+        BooleanExpression byTag = QPost.post.tags.contains(tagToDelete);
+        Iterable<Post> posts = postRepository.findAll(byTag);
+        for (Post p : posts) {
+            p.getTags().remove(tagToDelete);
+        }
+        postRepository.saveAll(posts);
         tagRepository.deleteById(id);
     }
 

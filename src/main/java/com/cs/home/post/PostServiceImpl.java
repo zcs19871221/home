@@ -34,21 +34,6 @@ public class PostServiceImpl implements PostService {
         return postMapper.mapping(postRepository.save(post));
     }
 
-    private void updatePost(PostPayload postPayload, Post post) {
-        Set<Tag> tags = new HashSet<>();
-
-        if (postPayload.getTags() != null) {
-            BooleanExpression byIds =
-                    QTag.tag.id.in(postPayload.getTags().stream().toList());
-
-            Iterator<Tag> it = tagRepository.findAll(byIds).iterator();
-            it.forEachRemaining(tags::add);
-        }
-
-        post.setTags(tags);
-        postMapper.updatePost(postPayload, post);
-    }
-
     @Override
     public PostResponse get(Integer id) {
         return postMapper.mapping(postRepository.getReferenceById(id));
@@ -70,4 +55,21 @@ public class PostServiceImpl implements PostService {
     public void delete(Integer id) {
         postRepository.deleteById(id);
     }
+
+
+    private void updatePost(PostPayload postPayload, Post post) {
+        Set<Tag> tags = new HashSet<>();
+
+        if (postPayload.getTags() != null) {
+            BooleanExpression byIds =
+                    QTag.tag.id.in(postPayload.getTags().stream().toList());
+
+            Iterator<Tag> it = tagRepository.findAll(byIds).iterator();
+            it.forEachRemaining(tags::add);
+        }
+
+        post.setTags(tags);
+        postMapper.updatePost(postPayload, post);
+    }
+
 }

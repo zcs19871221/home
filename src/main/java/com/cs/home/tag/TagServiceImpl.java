@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 
 @Service
@@ -15,15 +14,11 @@ public class TagServiceImpl implements TagService {
 
     private final TagMapper tagMapper;
 
-
-    private final EntityManager em;
-
     @Override
     public TagResponse create(TagPayload tagPayload) {
         Tag tag = tagMapper.mapping(tagPayload);
         return tagMapper.mapping(tagRepository.save(tag));
     }
-
 
     @Override
     @Transactional
@@ -41,9 +36,7 @@ public class TagServiceImpl implements TagService {
     @Transactional
     public TagResponse update(int id, TagPayload tagPayload) {
         Tag tag = tagRepository.getReferenceById(id);
-        tagMapper.updateEntity(tagPayload, tag);
+        tagMapper.updateTag(tagPayload, tag);
         return tagMapper.mapping(tagRepository.save(tag));
     }
-
-
 }

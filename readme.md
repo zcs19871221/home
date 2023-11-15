@@ -15,10 +15,21 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
 
 ## dto最佳实践
 
-1. 每个接口应该有对应的dto（Request，Response），create和update的request
+1. 每个接口应该有对应的dto，定义有语义的后缀而不是Dto后缀（Request，Response），create和update的request
    payload可以考虑共用，把id放到path里。
 2. 不可变的：private final Type xxxx;
-3. 使用lombok的builder可以方便测试快速创建对象，但是要搭配
+3. 使用lombok的builder可以方便测试快速创建对象，但是要搭配@Jacksonized
+4. 嵌套的对象需要手动加valid验证
+
+## entity最佳实践
+
+1. 按需集成audit类，拥有创建时间，创建人，修改时间，修改人等属性
+2. 添加Version注解实现乐观锁
+
+        @Version 
+        private Long version 
+3. 属性需要添加校验的注解（notBlank，size等），可以获取更清晰的错误信息。
+4. 时间类型设置为 `Instant`
 
 ## MapStruct
 

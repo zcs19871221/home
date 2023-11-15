@@ -11,9 +11,7 @@ import javax.validation.Valid;
 @RequestMapping(path = "/api/posts")
 public class PostController {
 
-
     private final PostService postService;
-
 
     @PostMapping
     public Response<PostResponse> save(@Valid @RequestBody PostPayload postPayload) {
@@ -25,5 +23,14 @@ public class PostController {
         return Response.create(postService.get(id));
     }
 
+    @PutMapping("/{id}")
+    public Response<PostResponse> update(@Valid @RequestBody PostPayload postPayload, @PathVariable Integer id) {
+        return Response.create(postService.update(id, postPayload));
+    }
 
+    @DeleteMapping("/{id}")
+    public Response<String> delete(@PathVariable Integer id) {
+        postService.delete(id);
+        return Response.EmptyResponse();
+    }
 }

@@ -20,16 +20,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PostTests extends BaseIntegrationTest {
 
+
     @BeforeEach
     void cleanTable() {
         JdbcTestUtils.deleteFromTables(jdbcTemplate, "post_tag", "post",
                 "tag");
     }
 
-
     @Test
     @Transactional
-    void shouldCreatePostSuccessful() throws Exception {
+    void shouldCreateUpdateDeletePostSuccessful() throws Exception {
 
         TagPayload tagPayload = TagTests.create();
         MvcResult result = myPost("/tags", tagPayload)
@@ -53,13 +53,29 @@ class PostTests extends BaseIntegrationTest {
         PostPayload postPayload = PostPayload.builder().name("标题").content(
                 "正文").tags(tags).build();
 
-        myPost("/api/posts", postPayload)
+        MvcResult postResult = myPost("/api/posts", postPayload)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("data.name")
                         .value("标题"))
                 .andExpect(jsonPath("data.content").value("正文"))
                 .andExpect(jsonPath("data.tags", hasSize(2)))
-                .andExpect(jsonPath("data.tags[*].name", Matchers.containsInAnyOrder("算法", "随笔")));
+                .andExpect(jsonPath("data.tags[*].name",
+                        Matchers.containsInAnyOrder("算法", "随笔"))).andReturn();
+
+        Integer postId =
+                JsonPath.parse(postResult.getResponse().getContentAsString()).read("data.id");
+
+        myGet("/posts/" + postId).andExpect(status().isOk())
+                .andExpect(jsonPath("data.name")
+                        .value("标题"))
+                .andExpect(jsonPath("data.content").value("正文"))
+                .andExpect(jsonPath("data.tags", hasSize(2)))
+                .andExpect(jsonPath("data.tags[*].name",
+                        Matchers.containsInAnyOrder("算法", "随笔"))).andReturn();
+
+        PostPayload updatePost = PostPayload.builder().name("标题2").content(
+                "正文2").tags(tags).build();
+        myPut("/posts" + postId, updatePost).andExpect(status().isOk());
     }
 
 

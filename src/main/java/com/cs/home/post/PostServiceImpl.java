@@ -30,19 +30,28 @@ public class PostServiceImpl implements PostService {
     public PostResponse save(PostPayload postPayload) {
 
         Post post = postMapper.mapping(postPayload);
-        BooleanExpression byIds =
-                QTag.tag.id.in(postPayload.getTags().stream().toList());
-
-        Iterator<Tag> it = tagRepository.findAll(byIds).iterator();
-        Set<Tag> tags = new HashSet<>();
-        it.forEachRemaining(tags::add);
-        post.setTags(tags);
+        updatePost(postPayload, post);
         return postMapper.mapping(postRepository.save(post));
+    }
+
+    private void updatePost(PostPayload postPayload, Post post) {
+        Set<Tag> tags = new HashSet<>();
+
+        if (postPayload.getTags() != null) {
+            BooleanExpression byIds =
+                    QTag.tag.id.in(postPayload.getTags().stream().toList());
+
+            Iterator<Tag> it = tagRepository.findAll(byIds).iterator();
+            it.forEachRemaining(tags::add);
+        }
+
+        post.setTags(tags);
+        postMapper.updatePost(postPayload, post);
     }
 
     @Override
     public PostResponse get(Integer id) {
-        return null;
+        return postMapper.mapping(postRepository.getReferenceById(id));
     }
 
     @Override
@@ -52,11 +61,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponse update(Integer id, PostPayload postPayload) {
-        return null;
+        Post existingPost = postRepository.getReferenceById(id);
+        updatePost(postPayload, existingPost);
+        return postMapper.mapping(postRepository.save(existingPost));
     }
 
     @Override
-    public void Delete(Integer id) {
-
+    public void delete(Integer id) {
+        postRepository.deleteById(id);
     }
 }

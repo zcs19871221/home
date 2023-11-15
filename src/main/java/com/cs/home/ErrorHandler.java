@@ -2,6 +2,7 @@ package com.cs.home;
 
 import com.cs.home.common.Response;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 @ControllerAdvice
 @AllArgsConstructor
 @RestController
+@Slf4j
 public class ErrorHandler {
     private MessageSource messageSource;
 
@@ -26,7 +28,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Response<String> handleInvalidException(MethodArgumentNotValidException ex, Locale locale) {
         String message = ex.getFieldErrors().stream()
-                .map(e ->  messageSource.getMessage("showFieldInvalidMessage"
+                .map(e -> messageSource.getMessage("showFieldInvalidMessage"
                         , new String[]{e.getField(), e.getDefaultMessage()},
                         locale) + "\n")
                 .reduce(messageSource.getMessage("notValidArgument", null,
@@ -45,12 +47,12 @@ public class ErrorHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    public Response<String> handleDBViolationException(DataIntegrityViolationException ex,  Locale locale) {
+    public Response<String> handleDBViolationException(DataIntegrityViolationException ex, Locale locale) {
         Pattern p = Pattern.compile("constraint \\[[^.]+.[^_]+_([^_]+)" +
                 "_unique]");
         Matcher matcher = p.matcher(ex.getMessage() == null ? "" : ex.getMessage());
         if (matcher.find()) {
-            return   Response.create(messageSource.getMessage(
+            return Response.create(messageSource.getMessage(
                     "valueOfXExists",
                     new String[]{matcher.group(1)}, locale));
         }
@@ -60,6 +62,7 @@ public class ErrorHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Response<String> handleException(Exception ex) {
+        log.error("", ex);
         return Response.create(ex.getLocalizedMessage());
     }
 }

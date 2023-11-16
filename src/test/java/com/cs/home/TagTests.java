@@ -2,22 +2,23 @@ package com.cs.home;
 
 import com.cs.home.tag.TagPayload;
 import com.jayway.jsonpath.JsonPath;
+import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.jdbc.JdbcTestUtils;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 class TagTests extends BaseIntegrationTest {
-
-    public static TagPayload create() {
-        return TagPayload.builder().name("算法").build();
-    }
-
 
     @BeforeEach
     void cleanTable() {
@@ -27,13 +28,12 @@ class TagTests extends BaseIntegrationTest {
 
     @Test
     void shouldCreateTagSuccessful() throws Exception {
-        TagPayload tagPayload = create();
-        save(tagPayload);
+        insertTag(createTag("算法")).andExpect(jsonPath("data.name").value("算法"));
     }
 
     @Test
     void shouldDisplayErrorMessageWhenDuplicateName() throws Exception {
-        TagPayload tagPayload = create();
+        TagPayload tagPayload = createTag("算法");
 
         myPost("/tags", tagPayload)
                 .andExpect(status().isOk());
@@ -43,9 +43,9 @@ class TagTests extends BaseIntegrationTest {
 
     @Test
     void shouldDeleteSuccessful() throws Exception {
-        TagPayload tagPayload = create();
+        TagPayload tagPayload = createTag("算法");
 
-        Integer id = save(tagPayload);
+        Integer id = insertTagAndReturnId(tagPayload);
 
         myGet("/tags").andExpect(jsonPath("data", hasSize(1)));
 
@@ -57,8 +57,7 @@ class TagTests extends BaseIntegrationTest {
     @Test
     void shouldReturnErrorMessagesWithInvalidPayload() throws Exception {
 
-        TagPayload tagPayload = create();
-        tagPayload.setName("");
+        TagPayload tagPayload = createTag("");
         myPost("/tags", tagPayload).andExpect(status().is4xxClientError()).andExpect(jsonPath("data", containsString("'name' must not be blank")));
 
 
@@ -69,23 +68,47 @@ class TagTests extends BaseIntegrationTest {
 
     @Test
     void shouldUpdateSuccessful() throws Exception {
-        TagPayload tagPayload = create();
+        TagPayload tagPayload = createTag("算法");
 
-        Integer id = save(tagPayload);
+        Integer id = insertTagAndReturnId(tagPayload);
 
 
         tagPayload.setName("随笔");
         myPut("/tags" + "/" + id, tagPayload).andExpect(status().isOk());
 
-        myGet("/tags").andExpect(jsonPath("data[0].name", is("随笔")));
+        myGet("/tags/" + id).andExpect(jsonPath("data.name",
+                is("随笔"))).andExpect(jsonPath("data.id", is(id)));
     }
 
-    public Integer save(TagPayload tagPayload) throws Exception {
-        MvcResult result = myPost("/tags", tagPayload)
-                .andExpect(status().isOk()).andExpect(jsonPath("data.id").isNumber()).andReturn();
+    protected void validPostsInTag(Integer tagId,
+                                   Set<Integer> inputPosts) throws Exception {
+        String response =
+                myGet("/tags/" + tagId).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
-        String response = result.getResponse().getContentAsString();
+        JSONArray posts = JsonPath.parse(response).read(
+                "data" +
+                        ".posts");
+        HashSet<Integer> ids = new HashSet<>();
+        for (int i = 0; i < posts.size(); i++) {
+            Map<String, Object> map = (Map<String, Object>) posts.get(i);
+            ids.add((Integer) map.get("id"));
+        }
+        assertEquals(ids, inputPosts);
+    }
+
+    protected Integer insertTagAndReturnId(TagPayload tagPayload) throws Exception {
+        String response = insertTag(tagPayload).andReturn().getResponse().getContentAsString();
         return JsonPath.parse(response).read("data.id");
     }
+
+    protected ResultActions insertTag(TagPayload tagPayload) throws Exception {
+        return myPost("/tags", tagPayload)
+                .andExpect(status().isOk());
+    }
+
+    protected TagPayload createTag(String name) {
+        return TagPayload.builder().name(name).build();
+    }
+
 
 }

@@ -13,4 +13,6 @@ public interface TagService {
     List<TagResponse> findAll();
 
     TagResponse update(int id, TagPayload tagPayload);
+
+    TagResponse find(Integer id);
 }

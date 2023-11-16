@@ -43,5 +43,11 @@ public class TagController {
         return Response.create(result);
     }
 
+    @GetMapping("/{id}")
+    public Response<TagResponse> find(@PathVariable Integer id) {
+        log.info("GET /api/tags/${}", id);
+        return Response.create(tagService.find(id));
+    }
+
 
 }

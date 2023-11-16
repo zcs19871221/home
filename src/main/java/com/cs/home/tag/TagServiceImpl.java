@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,5 +52,12 @@ public class TagServiceImpl implements TagService {
         Tag tag = tagRepository.getReferenceById(id);
         tagMapper.updateTag(tagPayload, tag);
         return tagMapper.mapping(tagRepository.save(tag));
+    }
+
+    @Override
+    public TagResponse find(Integer id) {
+        Optional<Tag> tagMaybe =
+                tagRepository.findById(id);
+        return tagMaybe.map(tagMapper::mapping).orElse(null);
     }
 }

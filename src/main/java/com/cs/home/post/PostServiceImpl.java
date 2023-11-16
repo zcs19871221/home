@@ -9,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 @Service
@@ -30,13 +27,14 @@ public class PostServiceImpl implements PostService {
     public PostResponse save(PostPayload postPayload) {
 
         Post post = postMapper.mapping(postPayload);
-        updatePost(postPayload, post);
+        fillPost(postPayload, post);
         return postMapper.mapping(postRepository.save(post));
     }
 
     @Override
     public PostResponse get(Integer id) {
-        return postMapper.mapping(postRepository.getReferenceById(id));
+        Optional<Post> postMaybe = postRepository.findById(id);
+        return postMaybe.map(postMapper::mapping).orElse(null);
     }
 
     @Override
@@ -47,7 +45,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse update(Integer id, PostPayload postPayload) {
         Post existingPost = postRepository.getReferenceById(id);
-        updatePost(postPayload, existingPost);
+        fillPost(postPayload, existingPost);
         return postMapper.mapping(postRepository.save(existingPost));
     }
 
@@ -57,7 +55,7 @@ public class PostServiceImpl implements PostService {
     }
 
 
-    private void updatePost(PostPayload postPayload, Post post) {
+    private void fillPost(PostPayload postPayload, Post post) {
         Set<Tag> tags = new HashSet<>();
 
         if (postPayload.getTags() != null) {

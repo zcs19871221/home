@@ -1,3 +1,10 @@
+## findById vs getReferenceById
+
+getReferenceById will throw error if not exists.
+findById will return a Optional<object>
+
+普通的get/{id}请求最好用findById，如果为空就返回空值
+
 ## 数据库迁移管理
 
 # database first
@@ -39,23 +46,27 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
 1. 自定义转换方法
    需要手动转换的，可以在接口里定义default方法，mapstruct会把这些方法的参数类型和目标类型对应到：源类的类型和目标类的类型去自动执行
 
-   default Set<Tag> TagIdToTags(Set<Integer> tags) {
-   Set<Tag> ans = new HashSet<>();
-   for (Integer tagId : tags) {
-   Tag tag = new Tag();
-   tag.setId(tagId);
-   ans.add(tag);
-   }
-   return ans;
-   }
+         default Set<Tag> TagIdToTags(Set<Integer> tags) {
+            Set<Tag> ans = new HashSet<>();
+            for (Integer tagId : tags) {
+            Tag tag = new Tag();
+            tag.setId(tagId);
+            ans.add(tag);
+            }
+            return ans;
+         }
 
-   default Set<Integer> TagsToTagId(Set<Tag> tags) {
-   Set<Integer> ans = new HashSet<>();
-   for (Tag tag : tags) {
-   ans.add(tag.getId());
-   }
-   return ans;
-   }
+         default Set<Integer> TagsToTagId(Set<Tag> tags) {
+            Set<Integer> ans = new HashSet<>();
+            for (Tag tag : tags) {
+            ans.add(tag.getId());
+            }
+            return ans;
+         }
+
+2. 循环引用(circle dependency)解决：
+    1. 如果entity的manyToMany实体中mappedBy部分不需要额外的Set数据，去掉，从根本上解决问题。
+    2. 在同一个mapper中单独定义list中的类型映射，并设置ignore
 
 # jpa entityManger session JpaRepository关系
 

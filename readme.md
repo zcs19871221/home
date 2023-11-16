@@ -73,8 +73,14 @@ sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql�
 jpa和entityManger是标准，session是hibernate对entityManger的实现，JpaRepository是spring
 对jpa的抽象
 
-# 时区，时间
+# 时间，时区
 
-![时间 时区](timezone.jpg)
+前端发送和接收的时间都是毫秒数。
 
-      SET GLOBAL time_zone = '+0:00';
+requestDto类型：Instant
+entity类型：Instant
+数据库列：timestamp
+responseDto类型：Instant
+
+jackson配置： write-dates-as-timestamps: true 默认时间类型转换成epocTime
+默认前端处理时区，时间戳，如果直接给前端时间字符的话，使用string类型，Instant根据目标时区转换成ZonedTime后再format。   

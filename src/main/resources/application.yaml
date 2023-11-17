@@ -1,3 +1,8 @@
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
 spring:
   jpa:
     database-platform: "${DB_DIALECT:org.hibernate.dialect.MySQL8Dialect}"

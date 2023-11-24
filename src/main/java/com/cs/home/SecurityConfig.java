@@ -1,6 +1,6 @@
 package com.cs.home;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Data;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -8,8 +8,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,18 +20,21 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
+@Data
 class SecurityConfig {
 
-    @Autowired
-    DataSource dataSource;
+    private final DataSource dataSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.removeConfigurer(CsrfConfigurer.class);
         // login的url可以被任何人访问
         // 其他的任何url需要认证用户访问
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers(new AntPathRequestMatcher("/login")
+                        .requestMatchers(new AntPathRequestMatcher("/login",
+                                "GET"), new AntPathRequestMatcher("/login",
+                                "POST")
                         ).permitAll().anyRequest().authenticated()
                 );
 
@@ -53,17 +55,9 @@ class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
-                .roles("USER")
-                .build();
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
-                .roles("USER", "ADMIN")
-                .build();
+
         JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
+
 //        users.createUser(user);
 //        users.createUser(admin);
         return users;
@@ -73,5 +67,10 @@ class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
+
+//    @Autowired
+//    public void configure(AuthenticationManagerBuilder builder) {
+//        builder.jdbcAuthentication()
+//    }
 
 }

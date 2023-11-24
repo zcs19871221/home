@@ -57,9 +57,6 @@ class SecurityConfig {
     public UserDetailsService userDetailsService() {
 
         JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
-
-//        users.createUser(user);
-//        users.createUser(admin);
         return users;
     }
 

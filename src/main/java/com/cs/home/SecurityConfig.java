@@ -31,13 +31,15 @@ class SecurityConfig {
         // login的url可以被任何人访问
         // 其他的任何url需要认证用户访问
         http
-                .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers(new AntPathRequestMatcher("/login",
-                                "GET"), new AntPathRequestMatcher("/login",
-                                "POST")
-                        ).permitAll().anyRequest().authenticated()
-                );
-
+                .authorizeHttpRequests((authorize) ->
+                        authorize.requestMatchers(new AntPathRequestMatcher(
+                                                "/index.html"),
+                                        new AntPathRequestMatcher("/")).permitAll()
+                                .requestMatchers(new AntPathRequestMatcher("/login")
+                                ).permitAll().anyRequest().authenticated()
+                )
+                .formLogin(c -> c.loginPage("/login").failureForwardUrl(
+                        "/login").successForwardUrl("/index.html"));
 
         return http.build();
     }

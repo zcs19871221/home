@@ -1,16 +1,16 @@
-import { css } from '@linaria/core';
+import { css } from "@linaria/core";
 
 function App() {
-  return (
-    <div
-      className={css`
+	return (
+		<div
+			className={css`
         width: 100px;
         height: 100px;
         background-color: aliceblue;
         color: red;
       `}
-    ></div>
-  );
+		></div>
+	);
 }
 
 export default App;

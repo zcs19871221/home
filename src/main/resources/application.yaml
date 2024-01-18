@@ -5,18 +5,16 @@ logging:
         security: TRACE
 spring:
   jpa:
-    database-platform: "${DB_DIALECT:org.hibernate.dialect.MySQL8Dialect}"
+    database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/db_example?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8&autoReconnect=true
-    username: springuser
-    password: ThePassword
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:h2:file:./h2db
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  liquibase:
-    change-log: classpath:/changelog.yaml
   jackson:
     deserialization:
       read-date-timestamps-as-nanoseconds: false

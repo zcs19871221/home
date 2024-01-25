@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Response {
+public class FrontEndProjectResponse {
     private final String name;
 
     private final String path;
@@ -17,5 +17,7 @@ public class Response {
     private final Integer id;
 
     private final String command;
+
+    private Number port;
 
 }

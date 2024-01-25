@@ -5,26 +5,25 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public interface Service {
+public interface FrontEndProjectService {
 
-    Response save(CreatePayload postPayload);
+    FrontEndProjectResponse save(CreateFrontEndProjectPayload postPayload);
 
-    Response get(Integer id);
+    List<FrontEndProjectResponse> getAll() throws Exception;
 
-    List<Response> getAll();
-
-    Response update(Integer id, SeUpdatePayload seUpdatePayload);
+    FrontEndProjectResponse update(Integer id, UpdateFrontEndProjectPayload seUpdatePayload);
 
     void delete(Integer id);
 
-    void getOrCreateSeProcess(Integer seId) throws IOException;
+    void getOrStartFrontEndServer(Integer seId) throws IOException;
 
-    void stopSeProcess(Integer seId);
+    void stopFrontEndServer(Integer seId);
 
     void vsCode(String target) throws IOException;
 
-    void replaceFile(ReplacePayload replacePayload) throws IOException;
+    Map<Integer, FrontEndServerLog> getLogs() throws IOException;
 
-    Map<Integer, LogInfo> getLogs() throws IOException;
+    Integer getPort(String path) throws Exception;
 
+    void changePort(Integer id, Integer port) throws Exception;
 }

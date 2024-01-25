@@ -1,0 +1,10 @@
+登录流程
+登录页面 - 跳转回调 guradUi 登录地址
+guardUi内部使用saml协议，
+guradUi登录成功后，回调返回系统地址，并注入包含加密的用户信息。
+用户信息包含两段，以'.'分割，前半部分是用户信息的加密信息，后半部分是加密信息的sha1签名。
+
+当cookie发送到bff层以后，会先验证签名，然后把用户信息解密，获取用户id后发送到后端。
+这个部分是hi/render-server/middieware/session.js和hi/render-server/utils/sesion.js处理的。
+saml xml: callback地址
+

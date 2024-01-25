@@ -13,6 +13,9 @@ import { Se } from './se';
 
 export type AvailabeLocale = 'zh-CN' | 'en-US';
 
+const fetcher = (url: string) =>
+	fetch(url).then((r) => r.json().then((d) => d.data));
+
 export function importMessages(locale: AvailabeLocale) {
 	switch (locale) {
 		case 'en-US':
@@ -59,7 +62,11 @@ export const App = () => {
 
 	return (
 		<IntlProvider locale={locale} messages={messages}>
-			<SWRConfig>
+			<SWRConfig
+				value={{
+					fetcher,
+				}}
+			>
 				<ConfigProvider locale={{ locale }}>
 					<Layout style={{ minHeight: '100vh' }}>
 						<Sider>

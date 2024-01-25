@@ -1,23 +1,30 @@
 package com.cs.home.frontEndProjects;
 
+import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.nio.file.Path;
 import java.util.List;
 
-@org.mapstruct.Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface Mapper {
+@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface FrontEndProjectMapper {
 
-    FrontProject mapping(CreatePayload seCreatePayload);
-
-    FrontProject mapping(SeUpdatePayload seUpdatePayload);
+    FrontEndProject mapping(CreateFrontEndProjectPayload seCreatePayload);
 
 
-    void updateSe(@MappingTarget FrontProject dist, FrontProject src);
+    default String pathToString(Path path) {
+        return path.normalize().toString();
+    }
 
-    Response mapping(FrontProject se);
+    FrontEndProject mapping(UpdateFrontEndProjectPayload seUpdatePayload);
 
-    List<Response> mapping(List<FrontProject> seList);
+
+    void updateFrontEndProject(@MappingTarget FrontEndProject dist, FrontEndProject src);
+
+    FrontEndProjectResponse mapping(FrontEndProject se);
+
+    List<FrontEndProjectResponse> mapping(List<FrontEndProject> seList);
 
 }
 

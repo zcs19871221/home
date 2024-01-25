@@ -1,11 +1,11 @@
-package com.cs.home.seMicroFrontEnd;
+package com.cs.home.frontEndProjects;
 
 import com.cs.home.common.Response;
-import com.cs.home.frontEndProjects.*;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -15,12 +15,14 @@ import java.util.Map;
 @RestController
 @AllArgsConstructor
 @RequestMapping(path = "/api/se")
-public class seMicronFrontEndController {
+@CrossOrigin
+public class FrontEndProjectsController {
 
     private final FrontEndProjectService service;
 
     @GetMapping("/list")
-    public Response<List<FrontEndProjectResponse>> list() {
+    public Response<List<FrontEndProjectResponse>> list() throws Exception {
+        File f = new File("c:/sdffds");
         List<FrontEndProjectResponse> seResponses = service.getAll();
         return Response.create(seResponses);
     }
@@ -61,10 +63,18 @@ public class seMicronFrontEndController {
         return Response.EmptyResponse();
     }
 
-    @PutMapping("/replace")
-    public Response<String> replace(@RequestBody @Valid ReplaceFrontEndFilePayload replacePayload) throws IOException {
-        service.replaceFile(replacePayload);
+    @PutMapping("/port/{projectId}/{port}")
+    public Response<String> changePort(@PathVariable Integer projectId,
+                                       @PathVariable Integer port) throws Exception {
+        service.changePort(projectId, port);
         return Response.EmptyResponse();
+    }
+
+    @GetMapping("/port/{path}")
+    public Response<Integer> getPort(@PathVariable String path) throws Exception {
+
+        return Response.create(service.getPort(URLDecoder.decode(path,
+                StandardCharsets.UTF_8)));
     }
 
 
@@ -78,4 +88,6 @@ public class seMicronFrontEndController {
     public Response<Map<Integer, FrontEndServerLog>> logs() throws IOException {
         return Response.create(service.getLogs());
     }
+
+
 }

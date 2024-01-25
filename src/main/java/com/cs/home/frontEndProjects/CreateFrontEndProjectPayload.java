@@ -6,18 +6,20 @@ import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
 @Getter
 @Setter
 @Builder
 @Jacksonized
-public class CreatePayload {
+public class CreateFrontEndProjectPayload {
     @NotEmpty
     private String name;
 
-    @NotEmpty
-    private String path;
-
+    @NotNull
+    @PathConstraint
+    private Path path;
 
     @NotEmpty
     private String command;

@@ -1,6 +1,6 @@
 package com.cs.home.frontEndProjects;
 
-public enum Status {
+public enum FrontEndServerStatus {
     CLOSED,
     COMPILING,
     ERROR,

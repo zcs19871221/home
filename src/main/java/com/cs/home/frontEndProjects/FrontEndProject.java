@@ -6,13 +6,12 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @Valid
-public class FrontProject {
+public class FrontEndProject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,9 +26,7 @@ public class FrontProject {
     private String path;
 
     @Column(nullable = false)
-    private String startServerCommand;
+    private String command;
 
-    @ElementCollection
-    private Set<String> commands;
 
 }

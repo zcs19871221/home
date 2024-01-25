@@ -3,8 +3,8 @@ package com.cs.home.frontEndProjects;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class LogInfo {
+public class FrontEndServerLog {
     public String content;
-    public Status status;
+    public FrontEndServerStatus status;
     public Integer id;
 }

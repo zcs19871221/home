@@ -1,4 +1,4 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -14,10 +14,5 @@ public class SeUpdatePayload {
 
     private String path;
 
-    private ServerType serverType;
-
     private String command;
-
-    private Boolean baseServer;
-    
 }

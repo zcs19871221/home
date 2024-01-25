@@ -1,4 +1,4 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,12 +6,13 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @Valid
-public class Se {
+public class FrontProject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,10 +26,10 @@ public class Se {
     @Column(unique = true, nullable = false)
     private String path;
 
-    @Column(unique = true, nullable = false)
-    private ServerType serverType;
-
     @Column(nullable = false)
-    private String command;
+    private String startServerCommand;
+
+    @ElementCollection
+    private Set<String> commands;
 
 }

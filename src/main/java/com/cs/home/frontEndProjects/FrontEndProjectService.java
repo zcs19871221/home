@@ -1,19 +1,19 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public interface SeService {
+public interface Service {
 
-    SeResponse save(SeCreatePayload postPayload);
+    Response save(CreatePayload postPayload);
 
-    SeResponse get(Integer id);
+    Response get(Integer id);
 
-    List<SeResponse> getAll();
+    List<Response> getAll();
 
-    SeResponse update(Integer id, SeUpdatePayload seUpdatePayload);
+    Response update(Integer id, SeUpdatePayload seUpdatePayload);
 
     void delete(Integer id);
 

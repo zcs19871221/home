@@ -1,10 +1,9 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
@@ -17,44 +16,44 @@ import java.util.*;
 @AllArgsConstructor
 class ProcessInfo {
     Process process;
-    Se se;
+    FrontProject se;
     File log;
 }
 
-@Service
+@org.springframework.stereotype.Service
 @RequiredArgsConstructor
 @Slf4j
-public class SeServiceImpl implements SeService {
+public class ServiceImpl implements Service {
 
-    private final SeRepository seRepository;
-    private final SeMapper seMapper;
+    private final Repository seRepository;
+    private final Mapper mapper;
     private final Map<Integer, ProcessInfo> idMapProcess = new HashMap<>();
     private boolean shutDownhook = false;
 
     @Override
     @Transactional
-    public SeResponse save(SeCreatePayload seCreatePayload) {
+    public Response save(CreatePayload seCreatePayload) {
 
-        Se post = seMapper.mapping(seCreatePayload);
-        return seMapper.mapping(seRepository.save(post));
+        FrontProject post = mapper.mapping(seCreatePayload);
+        return mapper.mapping(seRepository.save(post));
     }
 
     @Override
-    public SeResponse get(Integer id) {
-        Optional<Se> postMaybe = seRepository.findById(id);
-        return postMaybe.map(seMapper::mapping).orElse(null);
+    public Response get(Integer id) {
+        Optional<FrontProject> postMaybe = seRepository.findById(id);
+        return postMaybe.map(mapper::mapping).orElse(null);
     }
 
     @Override
-    public List<SeResponse> getAll() {
-        return seMapper.mapping(seRepository.findAll());
+    public List<Response> getAll() {
+        return mapper.mapping(seRepository.findAll());
     }
 
     @Override
-    public SeResponse update(Integer id, SeUpdatePayload seUpdatePayload) {
-        Se existingPost = seRepository.getReferenceById(id);
-        seMapper.updateSe(existingPost, seMapper.mapping(seUpdatePayload));
-        return seMapper.mapping(seRepository.save(existingPost));
+    public Response update(Integer id, SeUpdatePayload seUpdatePayload) {
+        FrontProject existingPost = seRepository.getReferenceById(id);
+        mapper.updateSe(existingPost, mapper.mapping(seUpdatePayload));
+        return mapper.mapping(seRepository.save(existingPost));
     }
 
     @Override
@@ -68,7 +67,7 @@ public class SeServiceImpl implements SeService {
             idMapProcess.get(seId);
             return;
         }
-        Se se = seRepository.getReferenceById(seId);
+        FrontProject se = seRepository.getReferenceById(seId);
         String path = se.getPath();
         String[] commands = se.getCommand().split(" ");
         if (commands[0].contains("npm")) {

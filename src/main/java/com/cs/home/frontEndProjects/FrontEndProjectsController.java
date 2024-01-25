@@ -1,6 +1,7 @@
-package com.cs.home.se;
+package com.cs.home.seMicroFrontEnd;
 
 import com.cs.home.common.Response;
+import com.cs.home.frontEndProjects.*;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,24 +15,24 @@ import java.util.Map;
 @RestController
 @AllArgsConstructor
 @RequestMapping(path = "/api/se")
-public class SeController {
+public class seMicronFrontEndController {
 
-    private final SeService service;
+    private final FrontEndProjectService service;
 
     @GetMapping("/list")
-    public Response<List<SeResponse>> list() {
-        List<SeResponse> seResponses = service.getAll();
+    public Response<List<FrontEndProjectResponse>> list() {
+        List<FrontEndProjectResponse> seResponses = service.getAll();
         return Response.create(seResponses);
     }
 
     @PutMapping("/{id}")
-    public Response<SeResponse> update(@Valid @RequestBody SeUpdatePayload seUpdatePayload,
-                                       @PathVariable Integer id) {
+    public Response<FrontEndProjectResponse> update(@Valid @RequestBody UpdateFrontEndProjectPayload seUpdatePayload,
+                                                    @PathVariable Integer id) {
         return Response.create(service.update(id, seUpdatePayload));
     }
 
     @PostMapping
-    public Response<SeResponse> save(@Valid @RequestBody SeCreatePayload seCreatePayload) {
+    public Response<FrontEndProjectResponse> save(@Valid @RequestBody CreateFrontEndProjectPayload seCreatePayload) {
         return Response.create(service.save(seCreatePayload));
     }
 
@@ -43,25 +44,25 @@ public class SeController {
 
     @PutMapping("/start/{id}")
     public Response<String> start(@PathVariable Integer id) throws IOException {
-        service.getOrCreateSeProcess(id);
+        service.getOrStartFrontEndServer(id);
         return Response.EmptyResponse();
     }
 
     @PutMapping("/stop/{id}")
     public Response<String> stop(@PathVariable Integer id) {
-        service.stopSeProcess(id);
+        service.stopFrontEndServer(id);
         return Response.EmptyResponse();
     }
 
     @PutMapping("/restart/{id}")
     public Response<String> restart(@PathVariable Integer id) throws IOException {
-        service.stopSeProcess(id);
-        service.getOrCreateSeProcess(id);
+        service.stopFrontEndServer(id);
+        service.getOrStartFrontEndServer(id);
         return Response.EmptyResponse();
     }
 
     @PutMapping("/replace")
-    public Response<String> replace(@RequestBody @Valid ReplacePayload replacePayload) throws IOException {
+    public Response<String> replace(@RequestBody @Valid ReplaceFrontEndFilePayload replacePayload) throws IOException {
         service.replaceFile(replacePayload);
         return Response.EmptyResponse();
     }
@@ -74,7 +75,7 @@ public class SeController {
     }
 
     @GetMapping("/logs")
-    public Response<Map<Integer, LogInfo>> logs() throws IOException {
+    public Response<Map<Integer, FrontEndServerLog>> logs() throws IOException {
         return Response.create(service.getLogs());
     }
 }

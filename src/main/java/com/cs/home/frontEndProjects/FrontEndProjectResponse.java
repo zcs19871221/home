@@ -1,4 +1,4 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -9,12 +9,10 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SeResponse {
+public class Response {
     private final String name;
 
     private final String path;
-
-    private final ServerType serverType;
 
     private final Integer id;
 

@@ -1,4 +1,4 @@
-package com.cs.home.se;
+package com.cs.home.frontEndProjects;
 
 import lombok.AllArgsConstructor;
 

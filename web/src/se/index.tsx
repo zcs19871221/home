@@ -17,7 +17,7 @@ interface Project {
 }
 const base = 'http://localhost:9981';
 export const Se = () => {
-	const { data: projects } = useSWR<Project[]>(`${base}/api/se/list`);
+	const { data: projects, mutate } = useSWR<Project[]>(`${base}/api/se/list`);
 
 	const uiServer = projects?.find((p) => p.name.includes('-ui'));
 	const bffServer = projects?.find((p) => p.name.includes('-bff'));
@@ -48,7 +48,7 @@ export const Se = () => {
 		if (id === undefined) {
 			return;
 		}
-		fetch(`/api/se/${operation}/${id}`, { method: 'PUT' });
+		fetch(`${base}/api/se/${operation}/${id}`, { method: 'PUT' });
 	};
 
 	const [form] = Form.useForm();
@@ -74,6 +74,9 @@ export const Se = () => {
 							headers: {
 								'content-type': 'application/json',
 							},
+						}).then(() => {
+							mutate();
+							setAdding(false);
 						});
 					}}
 				>
@@ -145,7 +148,7 @@ export const Se = () => {
 						dataIndex: 'status',
 						title: '状态',
 						render: (_, record) => {
-							return logs?.[record.id]?.status;
+							return logs?.[record.id]?.status || 'close';
 						},
 					},
 					{

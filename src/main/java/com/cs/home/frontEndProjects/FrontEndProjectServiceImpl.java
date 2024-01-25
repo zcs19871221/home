@@ -1,7 +1,6 @@
 package com.cs.home.frontEndProjects;
 
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,13 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-@AllArgsConstructor
-class ProcessInfo {
-    Process process;
-    FrontEndProject se;
-    File log;
-}
 
 @Service
 @RequiredArgsConstructor

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +21,6 @@ public class FrontEndProjectsController {
 
     @GetMapping("/list")
     public Response<List<FrontEndProjectResponse>> list() throws Exception {
-        File f = new File("c:/sdffds");
         List<FrontEndProjectResponse> seResponses = service.getAll();
         return Response.create(seResponses);
     }

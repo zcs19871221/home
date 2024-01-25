@@ -65,6 +65,10 @@ export const App = () => {
 			<SWRConfig
 				value={{
 					fetcher,
+					revalidateOnFocus: true,
+					revalidateOnMount: true,
+					revalidateOnReconnect: true,
+					revalidateIfStale: false,
 				}}
 			>
 				<ConfigProvider locale={{ locale }}>

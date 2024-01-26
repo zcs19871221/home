@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 
-public class NodeServerLog {
-    public String content;
+public class NodeServerRunningInfo {
+    public String log;
     public NodeServerStatus status;
     public Integer id;
 }

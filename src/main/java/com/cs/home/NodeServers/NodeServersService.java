@@ -1,19 +1,26 @@
 package com.cs.home.NodeServers;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public interface NodeServersService {
-    NodeServerResponse save(NodeServerCreated nodeServerCreated);
+    NodeServerResponse save(NodeServerCreated nodeServerCreated) throws Exception;
 
     NodeServerResponse update(Integer nodeServerId,
-                              NodeServerUpdated nodeServerUpdated);
+                              NodeServerUpdated nodeServerUpdated) throws Exception;
 
-    void delete(Integer id);
+    void delete(Integer nodeServerId);
 
-    void startServer(Integer id) throws IOException;
+    void startServer(Integer nodeServerId) throws IOException;
 
-    void stopServer(Integer id);
+    void stopServer(Integer nodeServerId);
 
-    Integer getPort(String path) throws Exception;
+    void restartServer(Integer nodeServerId) throws IOException;
+
+    Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException;
+
+    List<NodeServerResponse> servers() throws Exception;
+
 
 }

@@ -23,7 +23,10 @@ public class NodeServer {
     private String command;
 
     @NotNull
-    private Integer port;
+    private String portConfigFile;
+
+    @NotNull
+    private String portReg;
 
     @ManyToOne
     private NpmProject npmProject;

@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,28 +23,32 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     private final NodeServerMapper nodeServerMapper;
 
-    private final String portReg = "port:\\s*(\\d+)";
-
     private Boolean shutDownhook = false;
 
     @Override
-    public NodeServerResponse save(NodeServerCreated nodeServerCreated) {
-        return nodeServerMapper.map(nodeServerRepository.save(nodeServerMapper.map(nodeServerCreated)));
+    public NodeServerResponse save(NodeServerCreated nodeServerCreated) throws Exception {
+        NodeServer nodeServer =
+                nodeServerRepository.save(nodeServerMapper.map(nodeServerCreated));
+        NodeServerResponse nodeServerResponse =
+                nodeServerMapper.map(nodeServerRepository.save(nodeServerMapper.map(nodeServerCreated)));
+        return fillPort(nodeServerResponse, nodeServer);
     }
 
     @Override
     public NodeServerResponse update(Integer nodeServerId,
-                                     NodeServerUpdated nodeServerUpdated) {
+                                     NodeServerUpdated nodeServerUpdated) throws Exception {
 
         NodeServer exist = nodeServerRepository.getReferenceById(nodeServerId);
 
         nodeServerMapper.merge(exist, nodeServerUpdated);
-        return nodeServerMapper.map(nodeServerRepository.save(exist));
+        NodeServerResponse nodeServerResponse =
+                nodeServerMapper.map(nodeServerRepository.save(exist));
+        return fillPort(nodeServerResponse, exist);
     }
 
     @Override
-    public void delete(Integer id) {
-
+    public void delete(Integer nodeServerId) {
+        nodeServerRepository.deleteById(nodeServerId);
     }
 
 
@@ -84,8 +86,9 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     }
 
-    public Map<Integer, NodeServerLog> getServerLogs() throws IOException {
-        Map<Integer, NodeServerLog> logInfos = new HashMap<>();
+    @Override
+    public Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException {
+        Map<Integer, NodeServerRunningInfo> logInfos = new HashMap<>();
         for (Map.Entry<Integer, ProcessInfo> numberProcessInfoEntry :
                 idMapServerProcess.entrySet()) {
             int id = numberProcessInfoEntry.getKey();
@@ -102,15 +105,30 @@ public class NodeServersServiceImpl implements NodeServersService {
         return logInfos;
     }
 
-    public Integer getPort(String path) throws Exception {
-        String content = Files.readString(Paths.get(path,
-                "project.js"));
-        Pattern pattern = Pattern.compile(portReg);
-        Matcher matcher = pattern.matcher(content);
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
+    @Override
+    public List<NodeServerResponse> servers() throws Exception {
+        List<NodeServer> nodeServers = nodeServerRepository.findAll();
+        List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
+        for (NodeServer nodeServer : nodeServers) {
+            NodeServerResponse nodeServerResponse =
+                    nodeServerMapper.map(nodeServer);
+            nodeServerResponses.add(fillPort(nodeServerResponse, nodeServer));
         }
-        throw new Exception("can not find port in file: " + path);
+        return nodeServerResponses;
+    }
+
+    private NodeServerResponse fillPort(NodeServerResponse nodeServerResponse,
+                                        NodeServer nodeServer) throws Exception {
+        String content =
+                Files.readString(Paths.get(nodeServer.getPortConfigFile()));
+        Pattern pattern = Pattern.compile(nodeServer.getPortReg());
+        Matcher matcher = pattern.matcher(content);
+        if (!matcher.find()) {
+            throw new Exception("can not find port in file: " + nodeServer.getPortConfigFile() + " with reg: " + nodeServer.getPortReg());
+        }
+
+        nodeServerResponse.setPort(Integer.parseInt(matcher.group(1)));
+        return nodeServerResponse;
     }
 
     @Override
@@ -124,19 +142,25 @@ public class NodeServersServiceImpl implements NodeServersService {
         idMapServerProcess.remove(nodeServerId);
     }
 
+    @Override
+    public void restartServer(Integer nodeServerId) throws IOException {
+        stopServer(nodeServerId);
+        startServer(nodeServerId);
+    }
+
     private void putLogInfos(String log,
-                             Map<Integer, NodeServerLog> logInfos,
+                             Map<Integer, NodeServerRunningInfo> logInfos,
                              int id) {
         if (log.contains("success")) {
-            logInfos.put(id, new NodeServerLog(log, NodeServerStatus.SUCCESS, id));
+            logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.SUCCESS, id));
             return;
         }
         String[] errors = {"error", "Err", "Error"};
         if (Arrays.stream(errors).anyMatch(log::contains)) {
-            logInfos.put(id, new NodeServerLog(log, NodeServerStatus.ERROR, id));
+            logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.ERROR, id));
             return;
         }
-        logInfos.put(id, new NodeServerLog(log, NodeServerStatus.UNKNOWN, id));
+        logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.UNKNOWN, id));
     }
 
     private Path getLogPath(String name) {

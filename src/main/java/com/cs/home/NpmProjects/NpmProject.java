@@ -1,4 +1,4 @@
-package com.cs.home.frontEndProjects;
+package com.cs.home.NpmProjects;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @Valid
-public class FrontEndProject {
+public class NpmProject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +24,5 @@ public class FrontEndProject {
     @Size(max = 50)
     @Column(unique = true, nullable = false)
     private String path;
-
-    @Column(nullable = false)
-    private String command;
-
 
 }

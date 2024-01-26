@@ -1,4 +1,4 @@
-package com.cs.home.frontEndProjects;
+package com.cs.home.common;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

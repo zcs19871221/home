@@ -1,4 +1,5 @@
-package com.cs.home.frontEndProjects;
+package com.cs.home.NodeServers;
+
 
 import lombok.AllArgsConstructor;
 
@@ -7,6 +8,6 @@ import java.io.File;
 @AllArgsConstructor
 class ProcessInfo {
     Process process;
-    FrontEndProject se;
+    NodeServer server;
     File log;
 }

@@ -1,28 +1,26 @@
-package com.cs.home.frontEndProjects;
+package com.cs.home.NpmProjects;
 
+import com.cs.home.common.PathConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
+import org.springframework.format.annotation.NumberFormat;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
 @Getter
 @Setter
 @Builder
 @Jacksonized
-public class CreateFrontEndProjectPayload {
-    @NotEmpty
+public class NpmProjectUpdated {
     private String name;
 
-    @NotNull
     @PathConstraint
     private Path path;
 
-    @NotEmpty
+    @NumberFormat
+    private Integer port;
+
     private String command;
-
-
 }

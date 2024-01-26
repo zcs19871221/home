@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class PathValidator implements
-        ConstraintValidator<PathConstraint, Path> {
+        ConstraintValidator<PathExists, Path> {
 
 
     @Override

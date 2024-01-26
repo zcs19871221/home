@@ -23,7 +23,7 @@ public class NodeServer {
     private String command;
 
     @NotNull
-    private String portConfigFile;
+    private String portConfigFileRelativePath;
 
     @NotNull
     private String portReg;

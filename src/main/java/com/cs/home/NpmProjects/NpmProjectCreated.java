@@ -1,6 +1,6 @@
 package com.cs.home.NpmProjects;
 
-import com.cs.home.common.PathConstraint;
+import com.cs.home.common.PathExists;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +19,7 @@ public class NpmProjectCreated {
     private String name;
 
     @NotNull
-    @PathConstraint
+    @PathExists
     private Path path;
 
 }

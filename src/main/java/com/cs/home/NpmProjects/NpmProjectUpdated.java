@@ -1,6 +1,6 @@
 package com.cs.home.NpmProjects;
 
-import com.cs.home.common.PathConstraint;
+import com.cs.home.common.PathExists;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +16,7 @@ import java.nio.file.Path;
 public class NpmProjectUpdated {
     private String name;
 
-    @PathConstraint
+    @PathExists
     private Path path;
 
     @NumberFormat

@@ -36,19 +36,19 @@ public class NodeServerController {
         return Response.EmptyResponse();
     }
 
-    @PutMapping("/{nodeServerId}")
+    @PutMapping("/start/{nodeServerId}")
     Response<String> startServer(@PathVariable Integer nodeServerId) throws IOException {
         nodeServersService.startServer(nodeServerId);
         return Response.EmptyResponse();
     }
 
-    @PutMapping("/{nodeServerId}")
+    @PutMapping("/stop/{nodeServerId}")
     Response<String> stopServer(@PathVariable Integer nodeServerId) {
         nodeServersService.stopServer(nodeServerId);
         return Response.EmptyResponse();
     }
 
-    @PutMapping("/{nodeServerId}")
+    @PutMapping("/restart/{nodeServerId}")
     Response<String> restartServer(@PathVariable Integer nodeServerId) throws IOException {
         nodeServersService.restartServer(nodeServerId);
         return Response.EmptyResponse();
@@ -59,7 +59,7 @@ public class NodeServerController {
         return Response.create(nodeServersService.servers());
     }
 
-    @GetMapping
+    @GetMapping("/runningInfos")
     Response<Map<Integer, NodeServerRunningInfo>> serverRunningInfos() throws Exception {
         return Response.create(nodeServersService.serverRunningInfos());
     }

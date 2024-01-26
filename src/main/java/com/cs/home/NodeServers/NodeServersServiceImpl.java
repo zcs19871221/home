@@ -119,12 +119,15 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     private NodeServerResponse fillPort(NodeServerResponse nodeServerResponse,
                                         NodeServer nodeServer) throws Exception {
+        Path path = Paths.get(nodeServer.getNpmProject().getPath(),
+                nodeServer.getPortConfigFileRelativePath());
         String content =
-                Files.readString(Paths.get(nodeServer.getPortConfigFile()));
+                Files.readString(path);
         Pattern pattern = Pattern.compile(nodeServer.getPortReg());
         Matcher matcher = pattern.matcher(content);
         if (!matcher.find()) {
-            throw new Exception("can not find port in file: " + nodeServer.getPortConfigFile() + " with reg: " + nodeServer.getPortReg());
+            throw new Exception("can not find port in file: " + path + " " +
+                    "with reg: " + nodeServer.getPortReg());
         }
 
         nodeServerResponse.setPort(Integer.parseInt(matcher.group(1)));

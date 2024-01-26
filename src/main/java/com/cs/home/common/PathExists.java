@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = PathValidator.class)
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PathConstraint {
+public @interface PathExists {
     String message() default "File or directory not exists";
 
     Class<?>[] groups() default {};

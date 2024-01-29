@@ -27,10 +27,11 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     @Override
     public NodeServerResponse save(NodeServerCreated nodeServerCreated) throws Exception {
-        NodeServer nodeServer =
-                nodeServerRepository.save(nodeServerMapper.map(nodeServerCreated));
+        NodeServer nodeServer = nodeServerMapper.map(nodeServerCreated);
+        nodeServer =
+                nodeServerRepository.save(nodeServer);
         NodeServerResponse nodeServerResponse =
-                nodeServerMapper.map(nodeServerRepository.save(nodeServerMapper.map(nodeServerCreated)));
+                nodeServerMapper.map(nodeServer);
         return fillPort(nodeServerResponse, nodeServer);
     }
 

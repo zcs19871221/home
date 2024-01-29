@@ -1,11 +1,9 @@
 package com.cs.home.NodeServers;
 
-import com.cs.home.common.StringToPattern;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.util.Set;
 
 @Data
@@ -22,8 +20,15 @@ public class NodeServerCreated {
     @NotEmpty
     private String portConfigFileRelativePath;
 
-    @NotEmpty
-    @StringToPattern
-    private Pattern portReg;
+    //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
+    private String portReg;
+
+
+//    @JsonSetter
+//    public void setPortReg(String portReg) {
+//        this.portReg = Pattern.compile(URLDecoder.decode(portReg,
+//                StandardCharsets.UTF_8));
+//    }
+
 
 }

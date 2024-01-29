@@ -1,21 +1,19 @@
 package com.cs.home;
 
 import com.cs.home.common.StringToPatternFormatterFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 public class MvcConfig implements WebMvcConfigurer {
 
-//    @Bean
-//    public StringToPatternFormatterFactory decodeUriFormatterFactory() {
-//        return new StringToPatternFormatterFactory();
-//    }
+    private final StringToPatternFormatterFactory stringToPatternFormatterFactory;
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        registry.addFormatterForFieldAnnotation(new
-                StringToPatternFormatterFactory());
+        registry.addFormatterForFieldAnnotation(stringToPatternFormatterFactory);
     }
 }

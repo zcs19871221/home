@@ -7,12 +7,14 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Data
-public class NodeServerCreated {
+public class NodeServerCreatedOrUpdated {
+
+    private Integer id;
 
     @NotEmpty
     private String command;
 
-    private Set<Integer> children;
+    private Set<NodeServerCreatedOrUpdated> children;
 
     @NotNull
     private Integer npmProjectId;

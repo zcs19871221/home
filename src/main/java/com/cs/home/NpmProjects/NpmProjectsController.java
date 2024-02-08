@@ -24,10 +24,9 @@ public class NpmProjectsController {
         return Response.create(seResponses);
     }
 
-    @PutMapping("/{id}")
-    public Response<NpmProjectResponse> update(@Valid @RequestBody NpmProjectUpdated npmProjectUpdated,
-                                               @PathVariable Integer id) {
-        return Response.create(service.update(id, npmProjectUpdated));
+    @PutMapping
+    public Response<NpmProjectResponse> update(@Valid @RequestBody NpmProjectUpdated npmProjectUpdated) {
+        return Response.create(service.update(npmProjectUpdated));
     }
 
     @PostMapping

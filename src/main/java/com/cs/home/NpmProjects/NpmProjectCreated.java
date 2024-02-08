@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
@@ -15,9 +14,6 @@ import java.nio.file.Path;
 @Builder
 @Jacksonized
 public class NpmProjectCreated {
-    @NotEmpty
-    private String name;
-
     @NotNull
     @PathExists
     private Path path;

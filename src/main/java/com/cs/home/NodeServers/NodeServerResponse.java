@@ -12,7 +12,6 @@ public class NodeServerResponse {
 
     private Integer port;
 
-    private Set<NodeServerResponse> dependentNodeServers;
+    private Set<NodeServerResponse> children;
 
-    private Integer npmProjectId;
 }

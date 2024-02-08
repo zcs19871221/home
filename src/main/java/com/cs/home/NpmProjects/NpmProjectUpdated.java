@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
-import org.springframework.format.annotation.NumberFormat;
 
+import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
 @Getter
@@ -14,13 +14,10 @@ import java.nio.file.Path;
 @Builder
 @Jacksonized
 public class NpmProjectUpdated {
-    private String name;
-
+    @NotNull
+    private Integer id;
+    
+    @NotNull
     @PathExists
     private Path path;
-
-    @NumberFormat
-    private Integer port;
-
-    private String command;
 }

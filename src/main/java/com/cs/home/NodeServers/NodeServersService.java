@@ -10,6 +10,8 @@ public interface NodeServersService {
     NodeServerResponse update(Integer nodeServerId,
                               NodeServerUpdated nodeServerUpdated) throws Exception;
 
+    NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception;
+
     void delete(Integer nodeServerId);
 
     void startServer(Integer nodeServerId) throws IOException;

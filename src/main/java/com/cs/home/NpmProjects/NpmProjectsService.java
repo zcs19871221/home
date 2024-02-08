@@ -6,10 +6,9 @@ import java.util.List;
 
 public interface NpmProjectsService {
 
-    NpmProjectResponse save(NpmProjectCreated postPayload);
+    NpmProjectResponse save(NpmProjectCreated npmProjectCreated);
 
-    NpmProjectResponse update(Integer id,
-                              NpmProjectUpdated seUpdatePayload);
+    NpmProjectResponse update(NpmProjectUpdated npmProjectUpdated);
 
     void delete(Integer id);
 

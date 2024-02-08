@@ -30,16 +30,15 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
 
     @Override
-    public NpmProjectResponse update(Integer id,
-                                     NpmProjectUpdated npmProjectUpdated) {
-        NpmProject existingPost = npmProjectsRepository.getReferenceById(id);
-
-        npmProjectMapper.updateNpmProject(existingPost, npmProjectMapper.map(npmProjectUpdated));
-
-        return npmProjectMapper.map(npmProjectsRepository.save(existingPost));
+    @Transactional
+    public NpmProjectResponse update(NpmProjectUpdated npmProjectUpdated) {
+        NpmProject npmProject = npmProjectMapper.map(npmProjectUpdated);
+        npmProjectsRepository.save(npmProject);
+        return npmProjectMapper.map(npmProject);
     }
 
     @Override
+    @Transactional
     public void delete(Integer id) {
         npmProjectsRepository.deleteById(id);
     }

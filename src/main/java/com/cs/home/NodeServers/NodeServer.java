@@ -16,7 +16,7 @@ import java.util.Set;
 @Valid
 public class NodeServer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
     @NotEmpty
@@ -31,7 +31,10 @@ public class NodeServer {
     @ManyToOne
     private NpmProject npmProject;
 
-    @OneToMany
-    private Set<NodeServer> dependentServers;
+    @ManyToOne
+    private NodeServer parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<NodeServer> children;
 
 }

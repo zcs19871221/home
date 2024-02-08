@@ -1,0 +1,15 @@
+{
+	"nodeServers": [
+		{
+			"command": "npm run build",
+			"portConfigFileRelativePath": "project.js",
+			"portReg": "port%3A%5Cs*(%5Cd%2B)",
+			"parent": {
+				"command": "npm run devServer",
+				"portConfigFileRelativePath": "project.js",
+				"portReg": "port%3A%5Cs*(%5Cd%2B)"
+			}
+		}
+	],
+	"path": "c:/work/eh-ui"
+}

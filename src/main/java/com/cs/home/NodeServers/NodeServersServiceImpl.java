@@ -48,6 +48,14 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
     @Override
+    public NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception {
+        NodeServer nodeServer =
+                nodeServerMapper.map(nodeServerCreatedOrUpdated);
+        nodeServerRepository.save(nodeServer);
+        return nodeServerMapper.map(nodeServer);
+    }
+
+    @Override
     public void delete(Integer nodeServerId) {
         nodeServerRepository.deleteById(nodeServerId);
     }
@@ -70,7 +78,7 @@ public class NodeServersServiceImpl implements NodeServersService {
         p.directory(new File(path));
         p.redirectErrorStream(true);
         File log =
-                new File(getLogPath(nodeServer.getNpmProject().getName() +
+                new File(getLogPath(nodeServer.getNpmProject().getId() +
                         "-server" + nodeServerId).toString());
         p.redirectOutput(log);
         idMapServerProcess.put(nodeServerId, new ProcessInfo(p.start(), nodeServer,

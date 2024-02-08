@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -36,5 +37,21 @@ public class NodeServer {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeServer> children;
+
+    public void addChild(NodeServer child) {
+        if (children == null) {
+            setChildren(new HashSet<>());
+        }
+        child.parent = this;
+        children.add(child);
+    }
+
+    public void removeChild(NodeServer child) {
+        child.parent = null;
+        if (children == null) {
+            return;
+        }
+        children.remove(child);
+    }
 
 }

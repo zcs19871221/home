@@ -18,17 +18,10 @@ public class NodeServerController {
     private final NodeServersService nodeServersService;
 
     @PostMapping
-    Response<NodeServerResponse> save(@RequestBody @Valid NodeServerCreated nodeServerCreated) throws Exception {
-        return Response.create(nodeServersService.save(nodeServerCreated));
+    Response<NodeServerResponse> createOrUpdate(@RequestBody @Valid NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception {
+        return Response.create(nodeServersService.createOrUpdate(nodeServerCreatedOrUpdated));
     }
 
-
-    @PutMapping("/{nodeServerId}")
-    Response<NodeServerResponse> update(@PathVariable Integer nodeServerId,
-                                        @RequestBody @Valid NodeServerUpdated nodeServerUpdated) throws Exception {
-        return Response.create(nodeServersService.update(nodeServerId,
-                nodeServerUpdated));
-    }
 
     @DeleteMapping("/{nodeServerId}")
     Response<String> delete(@PathVariable Integer nodeServerId) {

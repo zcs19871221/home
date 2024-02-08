@@ -6,15 +6,15 @@ import java.util.List;
 
 public interface NpmProjectsService {
 
-    NpmProjectResponse save(NpmProjectCreated npmProjectCreated);
+    NpmProjectResponse save(NpmProjectCreated npmProjectCreated) throws Exception;
 
-    NpmProjectResponse update(NpmProjectUpdated npmProjectUpdated);
+    NpmProjectResponse update(NpmProjectUpdated npmProjectUpdated) throws Exception;
 
     void delete(Integer id);
 
 
     void vsCode(String target) throws IOException;
 
-    List<NpmProjectResponse> list();
+    List<NpmProjectResponse> list() throws Exception;
 
 }

@@ -19,18 +19,18 @@ public class NpmProjectsController {
     private final NpmProjectsService service;
 
     @GetMapping
-    public Response<List<NpmProjectResponse>> list() {
+    public Response<List<NpmProjectResponse>> list() throws Exception {
         List<NpmProjectResponse> seResponses = service.list();
         return Response.create(seResponses);
     }
 
     @PutMapping
-    public Response<NpmProjectResponse> update(@Valid @RequestBody NpmProjectUpdated npmProjectUpdated) {
+    public Response<NpmProjectResponse> update(@Valid @RequestBody NpmProjectUpdated npmProjectUpdated) throws Exception {
         return Response.create(service.update(npmProjectUpdated));
     }
 
     @PostMapping
-    public Response<NpmProjectResponse> save(@Valid @RequestBody NpmProjectCreated npmProjectCreated) {
+    public Response<NpmProjectResponse> save(@Valid @RequestBody NpmProjectCreated npmProjectCreated) throws Exception {
         return Response.create(service.save(npmProjectCreated));
     }
 

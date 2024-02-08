@@ -5,11 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface NodeServersService {
-    NodeServerResponse save(NodeServerCreated nodeServerCreated) throws Exception;
-
-    NodeServerResponse update(Integer nodeServerId,
-                              NodeServerUpdated nodeServerUpdated) throws Exception;
-
     NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception;
 
     void delete(Integer nodeServerId);
@@ -23,6 +18,8 @@ public interface NodeServersService {
     Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException;
 
     List<NodeServerResponse> servers() throws Exception;
+
+    NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception;
 
 
 }

@@ -14,4 +14,14 @@ public class NodeServerResponse {
 
     private Set<NodeServerResponse> children;
 
+    private Integer id;
+
+    private Integer npmProjectId;
+
+    private String portConfigFileRelativePath;
+
+    //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
+    private String portReg;
+
+
 }

@@ -1,28 +1,21 @@
 package com.cs.home.NodeServers;
 
-import com.cs.home.NpmProjects.NpmProject;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.regex.Pattern;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface NodeServerMapper {
-    NodeServer map(NodeServerCreated nodeServerCreated);
 
+    @Mapping(target = "npmProject", source = "npmProjectId", ignore = true)
+    @Mapping(target = "children", source = "children", ignore = true)
     NodeServer map(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated);
 
-    default NpmProject map(Integer npmProjectId) {
-
-        NpmProject npmProject = new NpmProject();
-        npmProject.setId(npmProjectId);
-        return npmProject;
-    }
-
+    @Mapping(target = "npmProjectId", source = "npmProject", ignore = true)
+    @Mapping(target = "children", source = "children", ignore = true)
     NodeServerResponse map(NodeServer nodeServer);
-
-    void merge(@MappingTarget NodeServer target, NodeServerUpdated src);
 
     default String map(Pattern portReg) {
         return portReg.toString();

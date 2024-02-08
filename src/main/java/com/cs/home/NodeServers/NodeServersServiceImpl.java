@@ -1,11 +1,16 @@
 package com.cs.home.NodeServers;
 
+import com.cs.home.NpmProjects.NpmProject;
+import com.cs.home.NpmProjects.NpmProjectsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,39 +25,53 @@ public class NodeServersServiceImpl implements NodeServersService {
     private final Map<Integer, ProcessInfo> idMapServerProcess = new HashMap<>();
 
     private final NodeServerRepository nodeServerRepository;
+    private final NpmProjectsRepository npmProjectsRepository;
 
     private final NodeServerMapper nodeServerMapper;
 
     private Boolean shutDownhook = false;
 
+    private NodeServer fillNpmProjectAndChildrenThenMap(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) {
+
+        NpmProject npmProject =
+                npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
+        NodeServer nodeServer =
+                nodeServerMapper.map(nodeServerCreatedOrUpdated);
+        nodeServer.setNpmProject(npmProject);
+        npmProject.addNodeServer(nodeServer);
+        if (nodeServerCreatedOrUpdated.getChildren() != null) {
+            for (NodeServerCreatedOrUpdated child : nodeServerCreatedOrUpdated.getChildren()) {
+                nodeServer.addChild(fillNpmProjectAndChildrenThenMap(child));
+            }
+        }
+
+        return nodeServer;
+    }
+
     @Override
-    public NodeServerResponse save(NodeServerCreated nodeServerCreated) throws Exception {
-        NodeServer nodeServer = nodeServerMapper.map(nodeServerCreated);
-        nodeServer =
-                nodeServerRepository.save(nodeServer);
+    public NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception {
         NodeServerResponse nodeServerResponse =
                 nodeServerMapper.map(nodeServer);
+        nodeServerResponse.setNpmProjectId(nodeServerResponse.getNpmProjectId());
+        if (nodeServer.getChildren() != null) {
+            Set<NodeServerResponse> children = new HashSet<>();
+            for (NodeServer child : nodeServer.getChildren()) {
+                children.add(fillThenMap(child));
+            }
+            nodeServerResponse.setChildren(children);
+        }
+
         return fillPort(nodeServerResponse, nodeServer);
     }
 
-    @Override
-    public NodeServerResponse update(Integer nodeServerId,
-                                     NodeServerUpdated nodeServerUpdated) throws Exception {
-
-        NodeServer exist = nodeServerRepository.getReferenceById(nodeServerId);
-
-        nodeServerMapper.merge(exist, nodeServerUpdated);
-        NodeServerResponse nodeServerResponse =
-                nodeServerMapper.map(nodeServerRepository.save(exist));
-        return fillPort(nodeServerResponse, exist);
-    }
 
     @Override
+    @Transactional
     public NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception {
         NodeServer nodeServer =
-                nodeServerMapper.map(nodeServerCreatedOrUpdated);
+                fillNpmProjectAndChildrenThenMap(nodeServerCreatedOrUpdated);
         nodeServerRepository.save(nodeServer);
-        return nodeServerMapper.map(nodeServer);
+        return fillThenMap(nodeServer);
     }
 
     @Override
@@ -119,9 +138,7 @@ public class NodeServersServiceImpl implements NodeServersService {
         List<NodeServer> nodeServers = nodeServerRepository.findAll();
         List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
         for (NodeServer nodeServer : nodeServers) {
-            NodeServerResponse nodeServerResponse =
-                    nodeServerMapper.map(nodeServer);
-            nodeServerResponses.add(fillPort(nodeServerResponse, nodeServer));
+            nodeServerResponses.add(fillThenMap(nodeServer));
         }
         return nodeServerResponses;
     }
@@ -132,11 +149,12 @@ public class NodeServersServiceImpl implements NodeServersService {
                 nodeServer.getPortConfigFileRelativePath());
         String content =
                 Files.readString(path);
-        Pattern pattern = Pattern.compile(nodeServer.getPortReg());
+        String portReg = URLDecoder.decode(nodeServer.getPortReg(), StandardCharsets.UTF_8);
+        Pattern pattern = Pattern.compile(portReg);
         Matcher matcher = pattern.matcher(content);
         if (!matcher.find()) {
-            throw new Exception("can not find port in file: " + path + " " +
-                    "with reg: " + nodeServer.getPortReg());
+            throw new RuntimeException("can not find port in file: " + path + " " +
+                    "with reg: " + portReg);
         }
 
         nodeServerResponse.setPort(Integer.parseInt(matcher.group(1)));

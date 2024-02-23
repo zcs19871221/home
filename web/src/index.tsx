@@ -71,7 +71,17 @@ export const App = () => {
 					revalidateIfStale: false,
 				}}
 			>
-				<ConfigProvider locale={{ locale }}>
+				<ConfigProvider
+					locale={{ locale }}
+					theme={{
+						token: {
+							// Seed Token
+							colorPrimary: '#7939cb',
+							borderRadius: 2,
+							fontSize: 16,
+						},
+					}}
+				>
 					<Layout style={{ minHeight: '100vh' }}>
 						<Sider>
 							<Menu

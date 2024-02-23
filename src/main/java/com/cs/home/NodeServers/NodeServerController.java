@@ -22,6 +22,11 @@ public class NodeServerController {
         return Response.create(nodeServersService.createOrUpdate(nodeServerCreatedOrUpdated));
     }
 
+    @PostMapping("/batch")
+    Response<List<NodeServerResponse>> createOrUpdateList(@RequestBody @Valid List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception {
+        return Response.create(nodeServersService.createOrUpdateList(nodeServerCreatedOrUpdatedList));
+    }
+
 
     @DeleteMapping("/{nodeServerId}")
     Response<String> delete(@PathVariable Integer nodeServerId) {
@@ -36,7 +41,7 @@ public class NodeServerController {
     }
 
     @PutMapping("/stop/{nodeServerId}")
-    Response<String> stopServer(@PathVariable Integer nodeServerId) {
+    Response<String> stopServer(@PathVariable Integer nodeServerId) throws IOException {
         nodeServersService.stopServer(nodeServerId);
         return Response.EmptyResponse();
     }
@@ -56,5 +61,12 @@ public class NodeServerController {
     Response<Map<Integer, NodeServerRunningInfo>> serverRunningInfos() throws Exception {
         return Response.create(nodeServersService.serverRunningInfos());
     }
+
+    @GetMapping("/clearLog/{nodeServerId}")
+    Response<String> clearLog(@PathVariable Integer nodeServerId) throws Exception {
+        nodeServersService.clearLog(nodeServerId);
+        return Response.EmptyResponse();
+    }
+
 
 }

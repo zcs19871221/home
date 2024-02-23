@@ -11,7 +11,7 @@ public interface NodeServersService {
 
     void startServer(Integer nodeServerId) throws IOException;
 
-    void stopServer(Integer nodeServerId);
+    void stopServer(Integer nodeServerId) throws IOException;
 
     void restartServer(Integer nodeServerId) throws IOException;
 
@@ -22,4 +22,7 @@ public interface NodeServersService {
     NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception;
 
 
+    List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception;
+
+    void clearLog(Integer nodeServerId) throws IOException;
 }

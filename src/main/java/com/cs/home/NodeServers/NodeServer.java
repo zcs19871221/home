@@ -7,7 +7,6 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,35 +22,42 @@ public class NodeServer {
     @NotEmpty
     private String command;
 
-    @NotNull
+    @NotEmpty
+    @Column(unique = true)
+    private String name;
+
+    @NotEmpty
     private String portConfigFileRelativePath;
 
-    @NotNull
+    @NotEmpty
     private String portReg;
 
     @ManyToOne
     private NpmProject npmProject;
 
     @ManyToOne
-    private NodeServer parent;
+    private NodeServer prevServer;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeServer> children;
+    @OneToMany(mappedBy = "prevServer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<NodeServer> postServers;
 
-    public void addChild(NodeServer child) {
-        if (children == null) {
-            setChildren(new HashSet<>());
+    public void addPostServer(NodeServer postServer) {
+        if (postServers == null) {
+            setPostServers(new HashSet<>());
         }
-        child.parent = this;
-        children.add(child);
+        postServer.prevServer = this;
+        postServers.add(postServer);
     }
 
-    public void removeChild(NodeServer child) {
-        child.parent = null;
-        if (children == null) {
-            return;
+    public void removePostServer(NodeServer postServer
+    ) {
+        if (postServers == null) {
+            setPostServers(new HashSet<>());
         }
-        children.remove(child);
+        postServers.remove(postServer);
+        if (postServer != null) {
+            postServer.prevServer = null;
+        }
     }
 
 }

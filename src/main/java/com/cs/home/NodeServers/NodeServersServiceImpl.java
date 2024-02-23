@@ -35,13 +35,24 @@ public class NodeServersServiceImpl implements NodeServersService {
 
         NpmProject npmProject =
                 npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
-        NodeServer nodeServer =
+        NodeServer nodeServer = null;
+        NodeServer mapped =
                 nodeServerMapper.map(nodeServerCreatedOrUpdated);
-        nodeServer.setNpmProject(npmProject);
+        if (nodeServerCreatedOrUpdated.getId() != null) {
+            nodeServer =
+                    nodeServerRepository.getReferenceById(nodeServerCreatedOrUpdated.getId());
+            nodeServerMapper.merge(mapped, nodeServer);
+            for (NodeServer postServer : nodeServer.getPostServers()) {
+
+            }
+        } else {
+            nodeServer = mapped;
+        }
+
         npmProject.addNodeServer(nodeServer);
-        if (nodeServerCreatedOrUpdated.getChildren() != null) {
-            for (NodeServerCreatedOrUpdated child : nodeServerCreatedOrUpdated.getChildren()) {
-                nodeServer.addChild(fillNpmProjectAndChildrenThenMap(child));
+        if (nodeServerCreatedOrUpdated.getPostServers() != null) {
+            for (NodeServerCreatedOrUpdated child : nodeServerCreatedOrUpdated.getPostServers()) {
+                nodeServer.addPostServer(fillNpmProjectAndChildrenThenMap(child));
             }
         }
 
@@ -52,18 +63,51 @@ public class NodeServersServiceImpl implements NodeServersService {
     public NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception {
         NodeServerResponse nodeServerResponse =
                 nodeServerMapper.map(nodeServer);
-        nodeServerResponse.setNpmProjectId(nodeServerResponse.getNpmProjectId());
-        if (nodeServer.getChildren() != null) {
-            Set<NodeServerResponse> children = new HashSet<>();
-            for (NodeServer child : nodeServer.getChildren()) {
-                children.add(fillThenMap(child));
+        nodeServerResponse.setNpmProjectId(nodeServer.getNpmProject().getId());
+        if (nodeServer.getPostServers() != null) {
+            Set<NodeServerResponse> postServers = new HashSet<>();
+            for (NodeServer child : nodeServer.getPostServers()) {
+                postServers.add(fillThenMap(child));
             }
-            nodeServerResponse.setChildren(children);
+            Set<Integer> postServerIds = new HashSet<>();
+
+            if (nodeServer.getPostServers() != null) {
+                for (NodeServer postServer : nodeServer.getPostServers()) {
+                    postServerIds.add(postServer.getId());
+                }
+            }
+            nodeServerResponse.setPostServerIds(postServerIds);
+            if (nodeServer.getPrevServer() != null) {
+                nodeServerResponse.setPrevServerId(nodeServer.getPrevServer().getId());
+            }
         }
 
         return fillPort(nodeServerResponse, nodeServer);
     }
 
+    @Override
+    @Transactional
+    public List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception {
+        List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
+        for (NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated : nodeServerCreatedOrUpdatedList) {
+            nodeServerResponses.add(createOrUpdate(nodeServerCreatedOrUpdated));
+        }
+        return nodeServerResponses;
+    }
+
+    @Override
+    public void clearLog(Integer nodeServerId) throws IOException {
+        ProcessInfo processInfo = idMapServerProcess.get(nodeServerId);
+        doClearLog(processInfo);
+    }
+
+
+    private void doClearLog(ProcessInfo processInfo) throws IOException {
+        if (processInfo != null) {
+            Files.writeString(processInfo.getLogFile().toPath(), "");
+            processInfo.log = "";
+        }
+    }
 
     @Override
     @Transactional
@@ -103,10 +147,15 @@ public class NodeServersServiceImpl implements NodeServersService {
         idMapServerProcess.put(nodeServerId, new ProcessInfo(p.start(), nodeServer,
                 log));
 
+
         if (!shutDownhook) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 for (Integer i : idMapServerProcess.keySet()) {
-                    stopServer(i);
+                    try {
+                        stopServer(i);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }));
             shutDownhook = true;
@@ -116,21 +165,42 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     @Override
     public Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException {
-        Map<Integer, NodeServerRunningInfo> logInfos = new HashMap<>();
+
         for (Map.Entry<Integer, ProcessInfo> numberProcessInfoEntry :
                 idMapServerProcess.entrySet()) {
-            int id = numberProcessInfoEntry.getKey();
             ProcessInfo processInfo = numberProcessInfoEntry.getValue();
-            String log = Files.readString(processInfo.log.toPath());
+            StringBuilder sb = new StringBuilder();
 
-            int lastCompilingIndex = log.indexOf("Compiling ");
-            if (lastCompilingIndex > -1) {
-                log = log.substring(lastCompilingIndex);
-                putLogInfos(log, logInfos, id);
+            String strLine;
+
+            while ((strLine = processInfo.getBr().readLine()) != null) {
+                sb.append(strLine);
+                sb.append("\n");
+
+                if (strLine.contains("Compiling ")) {
+                    processInfo.status = NodeServerStatus.COMPILING;
+                    processInfo.log = "";
+                    continue;
+                }
+
+                Pattern pattern = Pattern.compile("err(or)?",
+                        Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(strLine);
+                if (matcher.find()) {
+                    processInfo.status = NodeServerStatus.ERROR;
+                    continue;
+                }
+
+                if (strLine.contains("success") || strLine.contains("message: 'start at ")) {
+                    processInfo.status = NodeServerStatus.ERROR;
+                }
             }
-            putLogInfos(log, logInfos, id);
+
+            if (!sb.isEmpty()) {
+                processInfo.log += sb.toString();
+            }
         }
-        return logInfos;
+        return nodeServerMapper.map(idMapServerProcess);
     }
 
     @Override
@@ -162,13 +232,18 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
     @Override
-    public void stopServer(Integer nodeServerId) {
+    public void stopServer(Integer nodeServerId) throws IOException {
         if (!idMapServerProcess.containsKey(nodeServerId)) {
             return;
         }
 
-        idMapServerProcess.get(nodeServerId).process.descendants().forEach(ProcessHandle::destroy);
-        idMapServerProcess.get(nodeServerId).process.destroy();
+        ProcessInfo processInfo = idMapServerProcess.get(nodeServerId);
+        Process process = processInfo.getProcess();
+        process.descendants().forEach(ProcessHandle::destroy);
+        process.destroy();
+
+        processInfo.getReadStream().close();
+        doClearLog(processInfo);
         idMapServerProcess.remove(nodeServerId);
     }
 
@@ -176,21 +251,6 @@ public class NodeServersServiceImpl implements NodeServersService {
     public void restartServer(Integer nodeServerId) throws IOException {
         stopServer(nodeServerId);
         startServer(nodeServerId);
-    }
-
-    private void putLogInfos(String log,
-                             Map<Integer, NodeServerRunningInfo> logInfos,
-                             int id) {
-        if (log.contains("success")) {
-            logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.SUCCESS, id));
-            return;
-        }
-        String[] errors = {"error", "Err", "Error"};
-        if (Arrays.stream(errors).anyMatch(log::contains)) {
-            logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.ERROR, id));
-            return;
-        }
-        logInfos.put(id, new NodeServerRunningInfo(log, NodeServerStatus.UNKNOWN, id));
     }
 
     private Path getLogPath(String name) {

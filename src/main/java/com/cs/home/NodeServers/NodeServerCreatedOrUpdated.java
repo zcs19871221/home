@@ -14,7 +14,10 @@ public class NodeServerCreatedOrUpdated {
     @NotEmpty
     private String command;
 
-    private Set<NodeServerCreatedOrUpdated> children;
+    @NotEmpty
+    private String name;
+
+    private Set<NodeServerCreatedOrUpdated> postServers;
 
     @NotNull
     private Integer npmProjectId;
@@ -24,7 +27,6 @@ public class NodeServerCreatedOrUpdated {
 
     //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
     private String portReg;
-
 
 //    @JsonSetter
 //    public void setPortReg(String portReg) {

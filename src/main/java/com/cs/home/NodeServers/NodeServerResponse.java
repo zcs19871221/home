@@ -10,9 +10,13 @@ public class NodeServerResponse {
 
     private String command;
 
+    private String name;
+
     private Integer port;
 
-    private Set<NodeServerResponse> children;
+    private Set<Integer> postServerIds;
+
+    private Integer prevServerId;
 
     private Integer id;
 

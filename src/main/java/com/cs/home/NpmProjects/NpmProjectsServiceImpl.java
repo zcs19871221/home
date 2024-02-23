@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,9 +68,18 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
         npmProjectsRepository.deleteById(id);
     }
 
+
     public void vsCode(String target) throws IOException {
         ProcessBuilder p = new ProcessBuilder("code.cmd", target);
         p.start();
+    }
+
+    public void openNpmProject(Integer npmProjectId) throws IOException {
+        NpmProject npmProject =
+                npmProjectsRepository.getReferenceById(npmProjectId);
+        String path = URLDecoder.decode(npmProject.getPath(), StandardCharsets.UTF_8);
+
+        vsCode(path);
     }
 
     @Override

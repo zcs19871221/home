@@ -1,201 +1,127 @@
-import { Button, Form, Input, Modal, Table } from 'antd';
-import TextArea from 'antd/es/input/TextArea';
-import { useState } from 'react';
+import { css } from '@linaria/core';
+import {
+	Button,
+	Form,
+	Input,
+	Modal,
+	Popconfirm,
+	Space,
+	Table,
+	Tag,
+	TagProps,
+	message,
+} from 'antd';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
+import { InnerForm } from './InnerForm';
+import {
+	NodeServerState,
+	Project,
+	NodeServerResponse,
+	LogInfo,
+	NodeServerStatus,
+	NodeServerPayload,
+} from './types';
+import { useNpmProjects } from './useNpmProjects';
 
-interface LogInfo {
-	content: string;
-	status: string;
-	id: number;
-}
-interface Project {
-	name: string;
-	path: string;
-	id: number;
-	command: string;
-	port: number;
-}
-const base = 'http://localhost:9981';
+export const base = 'http://localhost:9981';
+
+const request = async (
+	url: string,
+	method: 'POST' | 'PUT' | 'DELETE' | 'GET',
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	body?: Record<string, any>,
+) => {
+	try {
+		const res = await window.fetch(`${base}${url}`, {
+			method,
+			...(body && { body: JSON.stringify(body) }),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
+
+		const data = await res.json();
+		if (res.status !== 200) {
+			throw new Error(data?.data);
+		}
+		return data.data;
+	} catch (err) {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		message.error((err as any)?.message);
+	}
+};
+
 export const Se = () => {
-	const { data: projects, mutate } = useSWR<Project[]>(`${base}/api/se/list`);
+	const { data: npmProjects, mutate: refetchNpmProjects } = useNpmProjects();
 
-	const uiServer = projects?.find((p) => p.name.includes('-ui'));
-	const bffServer = projects?.find((p) => p.name.includes('-bff'));
-
-	const { data: logs } = useSWR<Record<number, LogInfo>>(
-		`${base}/api/se/logs`,
-		{
-			refreshInterval: 1000,
-		},
+	const [nodeServerStates, setNodeServerStates] = useState<NodeServerState[]>(
+		[],
 	);
 
-	const [log, setLog] = useState<LogInfo>();
-	const [adding, setAdding] = useState<boolean>(false);
-	const showLog = (id?: number) => {
-		if (!id) {
-			return;
-		}
-		setLog(logs?.[id]);
-	};
-	const vscode = (locate: string) => {
-		fetch(`/api/se/vscode/${locate}`, { method: 'PUT' });
-	};
+	const { nodeIdMapNodeServerResponse, rootNodeServerResonses } =
+		useMemo(() => {
+			const nodeIdMapNodeServerState: Record<number, NodeServerState> = {};
+			const nodeIdMapNodeServerResponse: Record<number, NodeServerResponse> =
+				{};
+			const rootNodeServerStates: NodeServerState[] = [];
+			const rootNodeServerResonses: NodeServerResponse[] = [];
 
-	const operateServer = (
-		operation: 'start' | 'stop' | 'restart',
-		id?: number,
-	) => {
-		if (id === undefined) {
-			return;
-		}
-		fetch(`${base}/api/se/${operation}/${id}`, { method: 'PUT' });
-	};
+			for (const npmProject of npmProjects ?? []) {
+				for (const nodeServerResponse of npmProject.nodeServers) {
+					nodeServerResponse.portConfigFileRelativePath = decodeURIComponent(
+						nodeServerResponse.portConfigFileRelativePath,
+					);
+					nodeServerResponse.portReg = decodeURIComponent(
+						nodeServerResponse.portReg,
+					);
+					const nodeServerState: NodeServerState = {
+						...nodeServerResponse,
+						postServers: [],
+					};
+					nodeIdMapNodeServerState[nodeServerResponse.id] = nodeServerState;
+					nodeIdMapNodeServerResponse[nodeServerResponse.id] =
+						nodeServerResponse;
+					if (!nodeServerResponse.prevServerId) {
+						rootNodeServerResonses.push(nodeServerResponse);
+						rootNodeServerStates.push(nodeServerState);
+					}
+				}
+			}
 
-	const [form] = Form.useForm();
+			for (const nodeServerState of Object.values(nodeIdMapNodeServerState)) {
+				nodeServerState.prevServer = nodeServerState.prevServerId
+					? nodeIdMapNodeServerState[nodeServerState.prevServerId]
+					: undefined;
+				nodeServerState.postServers =
+					nodeServerState.postServerIds?.map((postServerId) => {
+						return nodeIdMapNodeServerState[postServerId];
+					}) ?? [];
+			}
 
-	const onOk = () => {
-		form.submit();
-	};
+			setNodeServerStates(rootNodeServerStates);
 
-	return (
-		<div>
-			<Modal open={log !== undefined}>
-				<TextArea value={log?.content} />
-			</Modal>
-			<Modal open={adding} onCancel={() => setAdding(false)} onOk={onOk}>
-				<Form
-					form={form}
-					layout="vertical"
-					name="addProject"
-					onFinish={(v) => {
-						fetch(`${base}/api/se`, {
-							method: 'POST',
-							body: JSON.stringify(v),
-							headers: {
-								'content-type': 'application/json',
-							},
-						}).then(() => {
-							mutate();
-							setAdding(false);
-						});
-					}}
-				>
-					<Form.Item<Project>
-						label="path"
-						name="path"
-						rules={[{ required: true, message: 'Please input your path!' }]}
-					>
-						<Input />
-					</Form.Item>
+			return {
+				rootNodeServerResonses,
+				nodeIdMapNodeServerResponse,
+			};
+		}, [npmProjects]);
 
-					<Form.Item<Project>
-						label="name"
-						name="name"
-						rules={[{ required: true, message: 'Please input your name!' }]}
-					>
-						<Input />
-					</Form.Item>
-					<Form.Item<Project>
-						label="command"
-						name="command"
-						rules={[{ required: true, message: 'Please input your command!' }]}
-					>
-						<Input />
-					</Form.Item>
-				</Form>
-			</Modal>
-			<div>
-				<Button
-					type="primary"
-					onClick={() => {
-						operateServer('restart', uiServer?.id);
-					}}
-				>
-					重启UI
-				</Button>
-				<Button
-					type="primary"
-					onClick={() => {
-						operateServer('restart', bffServer?.id);
-					}}
-				>
-					重启BFF
-				</Button>
-				<Button type="primary" onClick={() => showLog(bffServer?.id)}>
-					bff日志
-				</Button>
-				<Button type="primary" onClick={() => showLog(uiServer?.id)}>
-					Ui日志
-				</Button>
-				<Button
-					type="primary"
-					onClick={() => {
-						form.resetFields();
-						setAdding(true);
-					}}
-				>
-					添加项目
-				</Button>
-			</div>
+	const expandedRowRender = (record: Project) => {
+		return (
 			<Table
-				dataSource={projects}
+				pagination={false}
+				dataSource={
+					record.nodeServers?.map((nodeserver) => {
+						const newNodeServer = { ...nodeserver, key: nodeserver.id };
+						return newNodeServer;
+					}) ?? []
+				}
+				rowKey="id"
 				columns={[
 					{
-						dataIndex: 'name',
-						title: '名称',
-					},
-					{
-						dataIndex: 'status',
-						title: '状态',
-						render: (_, record) => {
-							return logs?.[record.id]?.status || 'close';
-						},
-					},
-					{
-						dataIndex: 'operation',
-						title: '操作',
-						render: (_, record) => {
-							return (
-								<>
-									<Button
-										type="primary"
-										onClick={() => {
-											operateServer('start', record.id);
-										}}
-									>
-										打开
-									</Button>
-									<Button
-										type="primary"
-										onClick={() => {
-											operateServer('restart', record.id);
-										}}
-									>
-										重启
-									</Button>
-									<Button
-										type="primary"
-										onClick={() => {
-											showLog(record.id);
-										}}
-									>
-										日志
-									</Button>
-									<Button
-										type="primary"
-										onClick={() => {
-											vscode(record.path);
-										}}
-									>
-										vscode
-									</Button>
-								</>
-							);
-						},
-					},
-					{
-						dataIndex: 'path',
-						title: '项目路径',
+						dataIndex: 'command',
+						title: '命令',
 					},
 					{
 						dataIndex: 'port',
@@ -203,6 +129,409 @@ export const Se = () => {
 					},
 				]}
 			/>
+		);
+	};
+
+	const [currentNodeServer, setCurrentNodeServer] = useState<number | null>(
+		null,
+	);
+
+	const { data: nodeServerInfo, mutate: refetchLogInfos } = useSWR<{
+		[id: number]: LogInfo;
+	}>(`${base}/api/nodeServers/runningInfos`, {
+		revalidateIfStale: true,
+		revalidateOnMount: true,
+		revalidateOnFocus: true,
+		revalidateOnReconnect: true,
+		...(currentNodeServer != null && { refreshInterval: 1000 }),
+	});
+
+	const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
+		request(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(
+			() => {
+				message.success(`${type}成功`);
+			},
+			(error) => {
+				message.error(error.message);
+			},
+		);
+
+	const renderStatus = (
+		nodeServerId?: number | null,
+		nodeServerName?: string,
+	) => {
+		let text = '';
+		let color: TagProps['color'] = 'processing';
+
+		if (
+			!nodeServerInfo ||
+			nodeServerId === undefined ||
+			nodeServerId === null ||
+			nodeServerInfo[nodeServerId]?.status === undefined
+		) {
+			text = '未开启';
+			color = 'grey';
+		} else {
+			const status = nodeServerInfo[nodeServerId]?.status;
+
+			switch (status) {
+				case NodeServerStatus.CLOSED:
+					text = '已关闭';
+					color = 'grey';
+					break;
+				case NodeServerStatus.ERROR:
+					text = '错误';
+					color = 'error';
+					break;
+				case NodeServerStatus.COMPILING:
+					text = '编译中..';
+					color = 'processing';
+					break;
+				case NodeServerStatus.SUCCESS:
+					text = '成功';
+					color = 'success';
+					break;
+				case NodeServerStatus.UNKNOWN:
+					text = '未知';
+					color = 'warning';
+					break;
+				default: {
+					const error: never = status;
+					throw new Error(error);
+				}
+			}
+		}
+
+		return (
+			<Space
+				className={css`
+				display: flex;
+				align-items: center;
+			`}
+			>
+				<div>{nodeServerName ?? ''}</div>
+				<Tag bordered={false} color={color}>
+					{text}
+				</Tag>
+			</Space>
+		);
+	};
+	const nodeServerColumn = [
+		{
+			title: '名称',
+			dataIndex: 'name',
+			render: (_value: unknown, record: NodeServerResponse) => {
+				return renderStatus(record.id, record.name);
+			},
+		},
+
+		{
+			title: '命令',
+			dataIndex: 'command',
+		},
+		{
+			title: '端口',
+			dataIndex: 'port',
+		},
+		{
+			title: '操作',
+			render: (_: unknown, record: NodeServerResponse) => {
+				const info = nodeServerInfo ? nodeServerInfo[record.id] : null;
+
+				return (
+					<Space>
+						<Button
+							type="link"
+							onClick={() =>
+								request(`/api/npmProjects/vscode/${record.npmProjectId}`, 'GET')
+							}
+						>
+							vscode
+						</Button>
+						{(!info || info.status === NodeServerStatus.CLOSED) && (
+							<Button
+								type="link"
+								onClick={() =>
+									operator('start', record.id as number).then(() => {
+										setCurrentNodeServer(record.id);
+										refetchLogInfos();
+									})
+								}
+							>
+								启动
+							</Button>
+						)}
+						{info && (
+							<>
+								<Button
+									type="link"
+									onClick={() => setCurrentNodeServer(record.id ?? null)}
+								>
+									日志
+								</Button>
+								<Button
+									type="link"
+									onClick={() =>
+										operator('restart', record.id).then(() => {
+											setCurrentNodeServer(record.id);
+											refetchLogInfos();
+										})
+									}
+								>
+									重启
+								</Button>
+								{info.status !== NodeServerStatus.CLOSED && (
+									<Button
+										type="link"
+										onClick={() => operator('stop', record.id)}
+									>
+										关闭
+									</Button>
+								)}
+							</>
+						)}
+					</Space>
+				);
+			},
+		},
+	];
+
+	const Nested = (nodeServerResponse: NodeServerResponse) => {
+		if (
+			!nodeServerResponse.postServerIds ||
+			nodeServerResponse.postServerIds.length === 0
+		) {
+			return null;
+		}
+		return (
+			<Table
+				pagination={false}
+				dataSource={nodeServerResponse.postServerIds.map((id) => ({
+					...nodeIdMapNodeServerResponse[id],
+					key: id,
+				}))}
+				columns={nodeServerColumn}
+				expandable={{
+					expandedRowRender: Nested,
+					defaultExpandedRowKeys: nodeServerResponse.postServerIds,
+				}}
+			/>
+		);
+	};
+
+	const [openCreateNpmProjectModal, setOpenCreateNpmProjectModal] =
+		useState(false);
+	const [npmProjectForm] = Form.useForm();
+
+	const [openCreateNodeServer, setOpenCreateNodeServer] = useState(false);
+
+	const [editMode, setEditMode] = useState(false);
+
+	return (
+		<div>
+			<Space>
+				{editMode && (
+					<>
+						<Button
+							onClick={() => {
+								setOpenCreateNpmProjectModal(true);
+								npmProjectForm.resetFields();
+							}}
+							type="primary"
+						>
+							添加项目
+						</Button>
+
+						<Button
+							onClick={() => {
+								setOpenCreateNodeServer(true);
+							}}
+							type="primary"
+						>
+							编辑或添加服务
+						</Button>
+					</>
+				)}
+				<Button
+					onClick={() => {
+						setEditMode((prev) => !prev);
+					}}
+					type="primary"
+				>
+					{editMode ? '编辑模式' : '展示模式'}
+				</Button>
+			</Space>
+			{!editMode && rootNodeServerResonses.length > 0 && (
+				<Table
+					pagination={false}
+					dataSource={rootNodeServerResonses.map((e) => ({ ...e, key: e.id }))}
+					columns={nodeServerColumn}
+					expandable={{
+						expandedRowRender: Nested,
+						defaultExpandedRowKeys: rootNodeServerResonses.map((c) => c.id),
+					}}
+				/>
+			)}
+			{editMode && npmProjects?.length ? (
+				<Table
+					pagination={false}
+					dataSource={npmProjects.map((p) => ({ ...p, key: p.id }))}
+					expandable={{
+						expandedRowRender,
+						defaultExpandedRowKeys: npmProjects?.map((p) => p.id),
+					}}
+					columns={[
+						{
+							dataIndex: 'path',
+							title: '路径',
+						},
+						{
+							title: '操作',
+							render: (_, record) => {
+								return (
+									<div>
+										<Popconfirm
+											title="删除项目"
+											description="是否要删除项目"
+											onConfirm={() => {
+												request(`/api/npmProjects/${record.id}`, 'DELETE').then(
+													() => {
+														message.success('删除成功');
+														refetchNpmProjects();
+													},
+												);
+											}}
+										>
+											<Button type="link">删除</Button>
+										</Popconfirm>
+									</div>
+								);
+							},
+						},
+					]}
+				/>
+			) : null}
+			<Modal
+				open={openCreateNpmProjectModal}
+				title="添加项目"
+				onCancel={() => setOpenCreateNpmProjectModal(false)}
+				onOk={() => {
+					npmProjectForm.validateFields().then((values: { path: string }) => {
+						npmProjectForm.resetFields();
+						request('/api/npmProjects', 'POST', values).then(() => {
+							refetchNpmProjects();
+							setOpenCreateNpmProjectModal(false);
+							message.success('创建项目成功');
+						});
+					});
+				}}
+			>
+				<Form form={npmProjectForm} layout="vertical" name="path">
+					<Form.Item
+						name="path"
+						label="path"
+						rules={[
+							{
+								required: true,
+								message: 'Please input the path of project',
+							},
+						]}
+					>
+						<Input />
+					</Form.Item>
+				</Form>
+			</Modal>
+
+			<Modal
+				title="编辑或添加服务"
+				open={openCreateNodeServer}
+				onCancel={() => {
+					setOpenCreateNodeServer(false);
+				}}
+				okText="保存"
+				cancelText="取消"
+				onOk={() => {
+					const extract = (
+						nodeServerStates: NodeServerState[],
+					): NodeServerPayload[] => {
+						return nodeServerStates.map(
+							(nodeServerState): NodeServerPayload => {
+								const nodeServer: NodeServerPayload = {
+									...nodeServerState.form?.getFieldsValue(true),
+								};
+								nodeServer.postServers ??= [];
+								nodeServer.portConfigFileRelativePath = encodeURIComponent(
+									nodeServer.portConfigFileRelativePath,
+								);
+								nodeServer.portReg = encodeURIComponent(nodeServer.portReg);
+
+								nodeServer.postServers = extract(nodeServerState.postServers);
+								return nodeServer;
+							},
+						);
+					};
+					const nodeServers = extract(nodeServerStates);
+					request('/api/nodeServers/batch', 'POST', nodeServers)
+						.then(() => {
+							message.success('保存服务成功');
+							refetchNpmProjects();
+							setOpenCreateNodeServer(false);
+						})
+						.catch((err: { message?: string }) => {
+							message.error(err?.message);
+						});
+				}}
+				width={'80vw'}
+			>
+				<InnerForm
+					nodeServerStates={nodeServerStates}
+					rootNodeServerStates={nodeServerStates}
+					updateRootNodeServerStates={setNodeServerStates}
+				/>
+			</Modal>
+			<Modal
+				open={currentNodeServer !== null}
+				onCancel={() => setCurrentNodeServer(null)}
+				footer={null}
+				title={
+					<Space
+						className={css`
+						display: flex;
+						align-items: center;
+					`}
+					>
+						{renderStatus(
+							currentNodeServer,
+							currentNodeServer
+								? nodeIdMapNodeServerResponse[currentNodeServer]?.name
+								: '',
+						)}
+						<Button
+							type="link"
+							onClick={() =>
+								request(`/api/nodeServers/clearLog/${currentNodeServer}`, 'GET')
+							}
+						>
+							清除日志
+						</Button>
+					</Space>
+				}
+				width="80vw"
+				classNames={{
+					body: css`height: 80vh;overflow-y:scroll`,
+				}}
+				centered
+			>
+				{currentNodeServer && nodeServerInfo && (
+					<div
+						className={css`
+              white-space: pre-wrap;
+            `}
+					>
+						{nodeServerInfo[currentNodeServer]?.log}
+					</div>
+				)}
+			</Modal>
 		</div>
 	);
 };

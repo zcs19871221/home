@@ -17,4 +17,5 @@ public interface NpmProjectsService {
 
     List<NpmProjectResponse> list() throws Exception;
 
+    void openNpmProject(Integer npmProjectId) throws IOException;
 }

@@ -68,5 +68,12 @@ public class NodeServerController {
         return Response.EmptyResponse();
     }
 
+    @PutMapping("/changePort/{nodeServerId}/{port}")
+    Response<String> changePort(@PathVariable Integer nodeServerId,
+                                @PathVariable Integer port) throws Exception {
+        nodeServersService.changePort(nodeServerId, port);
+        return Response.EmptyResponse();
+    }
+
 
 }

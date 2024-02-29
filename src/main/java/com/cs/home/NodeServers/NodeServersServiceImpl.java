@@ -2,11 +2,14 @@ package com.cs.home.NodeServers;
 
 import com.cs.home.NpmProjects.NpmProject;
 import com.cs.home.NpmProjects.NpmProjectsRepository;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -28,26 +31,16 @@ public class NodeServersServiceImpl implements NodeServersService {
     private final NpmProjectsRepository npmProjectsRepository;
 
     private final NodeServerMapper nodeServerMapper;
-
+    @PersistenceContext
+    EntityManager entityManager;
     private Boolean shutDownhook = false;
 
     private NodeServer fillNpmProjectAndChildrenThenMap(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) {
 
         NpmProject npmProject =
                 npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
-        NodeServer nodeServer = null;
-        NodeServer mapped =
+        NodeServer nodeServer =
                 nodeServerMapper.map(nodeServerCreatedOrUpdated);
-        if (nodeServerCreatedOrUpdated.getId() != null) {
-            nodeServer =
-                    nodeServerRepository.getReferenceById(nodeServerCreatedOrUpdated.getId());
-            nodeServerMapper.merge(mapped, nodeServer);
-            for (NodeServer postServer : nodeServer.getPostServers()) {
-
-            }
-        } else {
-            nodeServer = mapped;
-        }
 
         npmProject.addNodeServer(nodeServer);
         if (nodeServerCreatedOrUpdated.getPostServers() != null) {
@@ -65,10 +58,6 @@ public class NodeServersServiceImpl implements NodeServersService {
                 nodeServerMapper.map(nodeServer);
         nodeServerResponse.setNpmProjectId(nodeServer.getNpmProject().getId());
         if (nodeServer.getPostServers() != null) {
-            Set<NodeServerResponse> postServers = new HashSet<>();
-            for (NodeServer child : nodeServer.getPostServers()) {
-                postServers.add(fillThenMap(child));
-            }
             Set<Integer> postServerIds = new HashSet<>();
 
             if (nodeServer.getPostServers() != null) {
@@ -88,6 +77,9 @@ public class NodeServersServiceImpl implements NodeServersService {
     @Override
     @Transactional
     public List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception {
+        nodeServerRepository.deleteAll();
+
+        entityManager.flush();
         List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
         for (NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated : nodeServerCreatedOrUpdatedList) {
             nodeServerResponses.add(createOrUpdate(nodeServerCreatedOrUpdated));
@@ -101,6 +93,30 @@ public class NodeServersServiceImpl implements NodeServersService {
         doClearLog(processInfo);
     }
 
+
+    private PortPath getPortAndFile(NodeServer nodeServer) throws IOException {
+
+        Path path = Paths.get(nodeServer.getNpmProject().getPath(),
+                nodeServer.getPortConfigFileRelativePath());
+        String content =
+                Files.readString(path);
+        String portReg = URLDecoder.decode(nodeServer.getPortReg(), StandardCharsets.UTF_8);
+        Pattern pattern = Pattern.compile(portReg);
+        return new PortPath(path, portReg, pattern.matcher(content), content);
+    }
+
+    @Override
+    public void changePort(Integer nodeServerId, Integer port) throws IOException {
+        NodeServer nodeServer =
+                nodeServerRepository.getReferenceById(nodeServerId);
+
+        PortPath portPath = getPortAndFile(nodeServer);
+        if (portPath.matcher.find()) {
+            String newContent = portPath.content.substring(0,
+                    portPath.matcher.start(1)) + port + portPath.content.substring(portPath.matcher.end(1));
+            Files.writeString(portPath.path, newContent);
+        }
+    }
 
     private void doClearLog(ProcessInfo processInfo) throws IOException {
         if (processInfo != null) {
@@ -122,7 +138,6 @@ public class NodeServersServiceImpl implements NodeServersService {
     public void delete(Integer nodeServerId) {
         nodeServerRepository.deleteById(nodeServerId);
     }
-
 
     @Override
     public void startServer(Integer nodeServerId) throws IOException {
@@ -191,7 +206,8 @@ public class NodeServersServiceImpl implements NodeServersService {
                     continue;
                 }
 
-                if (strLine.contains("success") || strLine.contains("message: 'start at ")) {
+                if (strLine.contains("success") || strLine.contains("message:" +
+                        " 'start at ") || strLine.contains("started at")) {
                     processInfo.status = NodeServerStatus.ERROR;
                 }
             }
@@ -215,19 +231,13 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     private NodeServerResponse fillPort(NodeServerResponse nodeServerResponse,
                                         NodeServer nodeServer) throws Exception {
-        Path path = Paths.get(nodeServer.getNpmProject().getPath(),
-                nodeServer.getPortConfigFileRelativePath());
-        String content =
-                Files.readString(path);
-        String portReg = URLDecoder.decode(nodeServer.getPortReg(), StandardCharsets.UTF_8);
-        Pattern pattern = Pattern.compile(portReg);
-        Matcher matcher = pattern.matcher(content);
-        if (!matcher.find()) {
-            throw new RuntimeException("can not find port in file: " + path + " " +
-                    "with reg: " + portReg);
+        PortPath portPath = getPortAndFile(nodeServer);
+        if (!portPath.matcher.find()) {
+            throw new RuntimeException("can not find port in file: " + portPath.path + " " +
+                    "with reg: " + portPath.portReg);
         }
 
-        nodeServerResponse.setPort(Integer.parseInt(matcher.group(1)));
+        nodeServerResponse.setPort(Integer.parseInt(portPath.matcher.group(1)));
         return nodeServerResponse;
     }
 
@@ -256,6 +266,14 @@ public class NodeServersServiceImpl implements NodeServersService {
     private Path getLogPath(String name) {
         String tmpDir = System.getProperty("java.io.tmpdir");
         return Paths.get(tmpDir, name + ".log");
+    }
+
+    @AllArgsConstructor
+    class PortPath {
+        Path path;
+        String portReg;
+        Matcher matcher;
+        String content;
     }
 
 

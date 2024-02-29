@@ -9,8 +9,6 @@ import java.util.Set;
 @Data
 public class NodeServerCreatedOrUpdated {
 
-    private Integer id;
-
     @NotEmpty
     private String command;
 

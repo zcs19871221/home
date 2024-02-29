@@ -5,6 +5,7 @@ import {
 	Input,
 	Modal,
 	Popconfirm,
+	Segmented,
 	Space,
 	Table,
 	Tag,
@@ -23,6 +24,7 @@ import {
 	NodeServerPayload,
 } from './types';
 import { useNpmProjects } from './useNpmProjects';
+import { DebouncedInput } from './useDebouncedValue';
 
 export const base = 'http://localhost:9981';
 
@@ -118,16 +120,7 @@ export const Se = () => {
 					}) ?? []
 				}
 				rowKey="id"
-				columns={[
-					{
-						dataIndex: 'command',
-						title: '命令',
-					},
-					{
-						dataIndex: 'port',
-						title: '端口',
-					},
-				]}
+				columns={nodeServerColumn.filter((t) => t.title !== '操作')}
 			/>
 		);
 	};
@@ -230,8 +223,43 @@ export const Se = () => {
 			dataIndex: 'command',
 		},
 		{
+			title: '地址',
+			render: (_v: unknown, record: NodeServerResponse) => {
+				return npmProjects?.find((n) => n.id === record.npmProjectId)?.path;
+			},
+		},
+		{
 			title: '端口',
 			dataIndex: 'port',
+			render: (port: string, record: NodeServerResponse) => {
+				const hasDuplicatedPort = Object.values(
+					nodeIdMapNodeServerResponse,
+				).find((n) => {
+					return n.id !== record.id && n.port === port;
+				});
+
+				return (
+					<DebouncedInput
+						value={port}
+						style={
+							hasDuplicatedPort
+								? {
+										color: 'red',
+								  }
+								: {}
+						}
+						onChange={(text: string) => {
+							if (String(text) === String(port)) {
+								return;
+							}
+							request(
+								`/api/nodeServers/changePort/${record.id}/${text}`,
+								'PUT',
+							).then(refetchNpmProjects);
+						}}
+					/>
+				);
+			},
 		},
 		{
 			title: '操作',
@@ -303,18 +331,21 @@ export const Se = () => {
 		) {
 			return null;
 		}
+		const datas = nodeServerResponse.postServerIds.map((id) => ({
+			...nodeIdMapNodeServerResponse[id],
+			key: id,
+		}));
 		return (
 			<Table
 				pagination={false}
-				dataSource={nodeServerResponse.postServerIds.map((id) => ({
-					...nodeIdMapNodeServerResponse[id],
-					key: id,
-				}))}
+				dataSource={datas}
 				columns={nodeServerColumn}
-				expandable={{
-					expandedRowRender: Nested,
-					defaultExpandedRowKeys: nodeServerResponse.postServerIds,
-				}}
+				{...(nodeServerResponse.postServerIds.length > 0 && {
+					expandable: {
+						expandedRowRender: Nested,
+						defaultExpandedRowKeys: nodeServerResponse.postServerIds,
+					},
+				})}
 			/>
 		);
 	};
@@ -329,7 +360,22 @@ export const Se = () => {
 
 	return (
 		<div>
-			<Space>
+			<Space
+				className={css`
+				margin: 10px 5px;
+			`}
+			>
+				<Segmented
+					options={['编辑模式', '展示模式']}
+					defaultValue={editMode ? '编辑模式' : '展示模式'}
+					onChange={(value) => {
+						if (value === '编辑模式') {
+							setEditMode(true);
+						} else {
+							setEditMode(false);
+						}
+					}}
+				/>
 				{editMode && (
 					<>
 						<Button
@@ -348,18 +394,10 @@ export const Se = () => {
 							}}
 							type="primary"
 						>
-							编辑或添加服务
+							整体编辑服务
 						</Button>
 					</>
 				)}
-				<Button
-					onClick={() => {
-						setEditMode((prev) => !prev);
-					}}
-					type="primary"
-				>
-					{editMode ? '编辑模式' : '展示模式'}
-				</Button>
 			</Space>
 			{!editMode && rootNodeServerResonses.length > 0 && (
 				<Table

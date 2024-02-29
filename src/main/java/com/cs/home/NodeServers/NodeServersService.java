@@ -25,4 +25,6 @@ public interface NodeServersService {
     List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception;
 
     void clearLog(Integer nodeServerId) throws IOException;
+
+    void changePort(Integer nodeServerId, Integer port) throws IOException;
 }

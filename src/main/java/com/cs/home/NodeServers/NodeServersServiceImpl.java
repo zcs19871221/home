@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -137,8 +138,11 @@ public class NodeServersServiceImpl implements NodeServersService {
     @Override
     @Transactional
     public List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception {
-        nodeServerRepository.deleteAll();
 
+        nodeServerRepository.deleteAll();
+        for (Integer nodeServerId : idMapServerProcess.keySet()) {
+            stopServer(nodeServerId);
+        }
         entityManager.flush();
         List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
         for (NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated : nodeServerCreatedOrUpdatedList) {
@@ -184,8 +188,10 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
     @Override
-    public void delete(Integer nodeServerId) {
+    @Transactional
+    public void delete(Integer nodeServerId) throws IOException {
         nodeServerRepository.deleteById(nodeServerId);
+        stopServer(nodeServerId);
     }
 
     @Override
@@ -208,8 +214,12 @@ public class NodeServersServiceImpl implements NodeServersService {
                 new File(getLogPath(nodeServer.getNpmProject().getId() +
                         "-server" + nodeServerId).toString());
         p.redirectOutput(log);
-        idMapServerProcess.put(nodeServerId, new ProcessInfo(p.start(), nodeServer,
-                log));
+        ProcessInfo processInfo = new ProcessInfo(p.start(), nodeServer,
+                log, nodeServer.getPrevServer() == null ? null : nodeServer.getPrevServer().getId(),
+                nodeServer.getPostServers() == null ?
+                        new ArrayList<>() :
+                        nodeServer.getPostServers().stream().map(NodeServer::getId).collect(Collectors.toList()));
+        idMapServerProcess.put(nodeServerId, processInfo);
 
 
         if (!shutDownhook) {
@@ -223,6 +233,10 @@ public class NodeServersServiceImpl implements NodeServersService {
                 }
             }));
             shutDownhook = true;
+        }
+
+        if (processInfo.getPrevServerId() != null) {
+            startServer(processInfo.getPrevServerId());
         }
 
     }
@@ -257,7 +271,7 @@ public class NodeServersServiceImpl implements NodeServersService {
 
                 if (strLine.contains("success") || strLine.contains("message:" +
                         " 'start at ") || strLine.contains("started at")) {
-                    processInfo.status = NodeServerStatus.ERROR;
+                    processInfo.status = NodeServerStatus.SUCCESS;
                 }
             }
 
@@ -292,6 +306,9 @@ public class NodeServersServiceImpl implements NodeServersService {
         processInfo.getReadStream().close();
         doClearLog(processInfo);
         idMapServerProcess.remove(nodeServerId);
+        for (Integer postServerId : processInfo.getPostServerIds()) {
+            stopServer(postServerId);
+        }
     }
 
     @Override

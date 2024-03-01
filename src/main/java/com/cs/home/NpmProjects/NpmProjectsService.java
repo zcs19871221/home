@@ -10,7 +10,7 @@ public interface NpmProjectsService {
 
     NpmProjectResponse update(NpmProjectUpdated npmProjectUpdated) throws Exception;
 
-    void delete(Integer id);
+    void delete(Integer id) throws IOException;
 
 
     void vsCode(String target) throws IOException;

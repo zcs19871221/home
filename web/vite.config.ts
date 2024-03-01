@@ -1,15 +1,28 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import wyw from "@wyw-in-js/vite";
+/* eslint-disable import/no-extraneous-dependencies */
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import wyw from '@wyw-in-js/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    target: ['es2020', 'edge88', 'chrome87'],
+    outDir: '../public',
+    // rollupOptions: {
+    //   output: {
+    //     manualChunks: {
+    //       vendor: ['antd', 'react', 'react-dom', 'swr', '@linaria/core'],
+    //     },
+    //   },
+    // },
+  },
   plugins: [
+    splitVendorChunkPlugin(),
     react(),
     wyw({
-      include: ["./src/**/*.{ts,tsx}"],
+      include: ['./src/**/*.{ts,tsx}'],
       babelOptions: {
-        presets: ["@babel/preset-typescript", "@babel/preset-react"],
+        presets: ['@babel/preset-typescript', '@babel/preset-react'],
       },
     }),
   ],

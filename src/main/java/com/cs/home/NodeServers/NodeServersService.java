@@ -7,7 +7,7 @@ import java.util.Map;
 public interface NodeServersService {
     NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception;
 
-    void delete(Integer nodeServerId);
+    void delete(Integer nodeServerId) throws IOException;
 
     void startServer(Integer nodeServerId) throws IOException;
 
@@ -27,5 +27,6 @@ public interface NodeServersService {
     void clearLog(Integer nodeServerId) throws IOException;
 
     void changePort(Integer nodeServerId, Integer port) throws IOException;
+
 
 }

@@ -73,7 +73,8 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
     @Override
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Integer id) throws IOException {
+        nodeServersService.stopServer(id);
         npmProjectsRepository.deleteById(id);
     }
 

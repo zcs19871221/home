@@ -33,7 +33,7 @@ public class NpmProjectsController {
     }
 
     @DeleteMapping("/{id}")
-    public Response<String> delete(@PathVariable Integer id) {
+    public Response<String> delete(@PathVariable Integer id) throws IOException {
         service.delete(id);
         return Response.EmptyResponse();
     }

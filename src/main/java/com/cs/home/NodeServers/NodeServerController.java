@@ -29,7 +29,7 @@ public class NodeServerController {
 
 
     @DeleteMapping("/{nodeServerId}")
-    Response<String> delete(@PathVariable Integer nodeServerId) {
+    Response<String> delete(@PathVariable Integer nodeServerId) throws IOException {
         nodeServersService.delete(nodeServerId);
         return Response.EmptyResponse();
     }

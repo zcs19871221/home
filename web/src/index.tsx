@@ -92,16 +92,14 @@ export const App = () => {
             <Layout>
               <Content>
                 <Routes>
-                  <Route path="/">
-                    <Route
-                      path="/nodeServerManagement"
-                      element={<NodeServerManagement />}
-                    />
-                    <Route
-                      path="*"
-                      element={<Navigate to="/nodeServerManagement" />}
-                    />
-                  </Route>
+                  <Route
+                    path="/nodeServerManagement"
+                    element={<NodeServerManagement />}
+                  />
+                  <Route
+                    path="*"
+                    element={<Navigate to="/nodeServerManagement" />}
+                  />
                 </Routes>
               </Content>
             </Layout>

@@ -27,5 +27,8 @@ public class NodeServerResponse {
     //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
     private String portReg;
 
+    private String errorMsg;
+
+    private ErrorField errorField = null;
 
 }

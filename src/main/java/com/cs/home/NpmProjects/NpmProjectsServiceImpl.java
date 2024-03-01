@@ -33,12 +33,13 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
         if (npmProject.getNodeServers() != null) {
             Set<NodeServerResponse> nodeServerResponses = new HashSet<>();
             for (NodeServer nodeServer : npmProject.getNodeServers()) {
-                nodeServerResponses.add(nodeServersService.fillThenMap(nodeServer));
+                nodeServerResponses.add(nodeServersService.map(nodeServer));
             }
             npmProjectResponse.setNodeServers(nodeServerResponses);
         }
         return npmProjectResponse;
     }
+
 
     @Override
     @Transactional
@@ -46,6 +47,10 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
         NpmProject project =
                 npmProjectMapper.map(createFrontEndProjectPayload);
+        String errorMsg = NpmProjectHelper.checkPath(project);
+        if (errorMsg != null) {
+            throw new RuntimeException(errorMsg);
+        }
         npmProjectsRepository.save(project);
         return map(project);
     }
@@ -58,6 +63,10 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
         npmProjectMapper.updateNpmProject(npmProject,
                 npmProjectMapper.map(npmProjectUpdated));
+        String errorMsg = NpmProjectHelper.checkPath(npmProject);
+        if (errorMsg != null) {
+            throw new RuntimeException(errorMsg);
+        }
         npmProjectsRepository.save(npmProject);
         return map(npmProject);
     }
@@ -73,6 +82,7 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
         ProcessBuilder p = new ProcessBuilder("code.cmd", target);
         p.start();
     }
+
 
     public void openNpmProject(Integer npmProjectId) throws IOException {
         NpmProject npmProject =

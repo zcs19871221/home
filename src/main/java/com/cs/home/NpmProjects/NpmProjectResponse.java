@@ -20,4 +20,6 @@ public class NpmProjectResponse {
 
     private Set<NodeServerResponse> nodeServers;
 
+    private String errorMsg;
+
 }

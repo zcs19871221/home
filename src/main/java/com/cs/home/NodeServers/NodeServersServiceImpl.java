@@ -1,8 +1,8 @@
 package com.cs.home.NodeServers;
 
 import com.cs.home.NpmProjects.NpmProject;
+import com.cs.home.NpmProjects.NpmProjectHelper;
 import com.cs.home.NpmProjects.NpmProjectsRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,14 +28,46 @@ public class NodeServersServiceImpl implements NodeServersService {
     private final Map<Integer, ProcessInfo> idMapServerProcess = new HashMap<>();
 
     private final NodeServerRepository nodeServerRepository;
-    private final NpmProjectsRepository npmProjectsRepository;
 
     private final NodeServerMapper nodeServerMapper;
+
+    private final NpmProjectsRepository npmProjectsRepository;
+
+
     @PersistenceContext
     EntityManager entityManager;
     private Boolean shutDownhook = false;
 
-    private NodeServer fillNpmProjectAndChildrenThenMap(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) {
+    private PortPath checkPath(NodeServer nodeServer) throws IOException {
+        Path path = Paths.get(nodeServer.getNpmProject().getPath(),
+                nodeServer.getPortConfigFileRelativePath());
+        File file = new File(path.toString());
+        PortPath portPath = new PortPath();
+        if (!file.isFile()) {
+            portPath.errorMsg = "端口配置文件" + path + "不存在或不是文件";
+            portPath.errorField = ErrorField.PORT_CONFIG_FILE;
+            return portPath;
+        }
+        String content =
+                Files.readString(path);
+        String portReg = URLDecoder.decode(nodeServer.getPortReg(), StandardCharsets.UTF_8);
+        Pattern pattern = Pattern.compile(portReg);
+        Matcher matcher = pattern.matcher(content);
+
+        portPath.path = path;
+        portPath.matcher = matcher;
+        portPath.portReg = portReg;
+
+        if (!matcher.find() || matcher.groupCount() == 0) {
+            portPath.errorMsg = "在文件" + path +
+                    "中没找到正则：/" + portReg + "/ 匹配的端口";
+            portPath.errorField = ErrorField.PORT_REG;
+
+        }
+        return portPath;
+    }
+
+    private NodeServer checkAndFill(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws IOException {
 
         NpmProject npmProject =
                 npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
@@ -43,9 +75,19 @@ public class NodeServersServiceImpl implements NodeServersService {
                 nodeServerMapper.map(nodeServerCreatedOrUpdated);
 
         npmProject.addNodeServer(nodeServer);
+
+        String projectErrorMsg =
+                NpmProjectHelper.checkPath(nodeServer.getNpmProject());
+        if (projectErrorMsg != null) {
+            throw new RuntimeException(projectErrorMsg);
+        }
+        PortPath portPath = checkPath(nodeServer);
+        if (portPath.errorMsg != null) {
+            throw new RuntimeException(portPath.errorMsg);
+        }
         if (nodeServerCreatedOrUpdated.getPostServers() != null) {
             for (NodeServerCreatedOrUpdated child : nodeServerCreatedOrUpdated.getPostServers()) {
-                nodeServer.addPostServer(fillNpmProjectAndChildrenThenMap(child));
+                nodeServer.addPostServer(checkAndFill(child));
             }
         }
 
@@ -53,9 +95,12 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
     @Override
-    public NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception {
+    public NodeServerResponse map(NodeServer nodeServer) throws Exception {
+
         NodeServerResponse nodeServerResponse =
                 nodeServerMapper.map(nodeServer);
+
+
         nodeServerResponse.setNpmProjectId(nodeServer.getNpmProject().getId());
         if (nodeServer.getPostServers() != null) {
             Set<Integer> postServerIds = new HashSet<>();
@@ -71,7 +116,22 @@ public class NodeServersServiceImpl implements NodeServersService {
             }
         }
 
-        return fillPort(nodeServerResponse, nodeServer);
+        String projectErrorMsg =
+                NpmProjectHelper.checkPath(nodeServer.getNpmProject());
+        if (projectErrorMsg != null) {
+            nodeServerResponse.setErrorMsg(projectErrorMsg);
+            nodeServerResponse.setErrorField(ErrorField.PROJECT_PATH);
+            return nodeServerResponse;
+        }
+
+        PortPath portPath = checkPath(nodeServer);
+        if (portPath.errorMsg != null) {
+            nodeServerResponse.setErrorMsg(portPath.errorMsg);
+        } else {
+            nodeServerResponse.setPort(Integer.parseInt(portPath.matcher.group(1)));
+        }
+
+        return nodeServerResponse;
     }
 
     @Override
@@ -94,24 +154,13 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
 
-    private PortPath getPortAndFile(NodeServer nodeServer) throws IOException {
-
-        Path path = Paths.get(nodeServer.getNpmProject().getPath(),
-                nodeServer.getPortConfigFileRelativePath());
-        String content =
-                Files.readString(path);
-        String portReg = URLDecoder.decode(nodeServer.getPortReg(), StandardCharsets.UTF_8);
-        Pattern pattern = Pattern.compile(portReg);
-        return new PortPath(path, portReg, pattern.matcher(content), content);
-    }
-
     @Override
     public void changePort(Integer nodeServerId, Integer port) throws IOException {
         NodeServer nodeServer =
                 nodeServerRepository.getReferenceById(nodeServerId);
 
-        PortPath portPath = getPortAndFile(nodeServer);
-        if (portPath.matcher.find()) {
+        PortPath portPath = checkPath(nodeServer);
+        if (portPath.errorMsg == null) {
             String newContent = portPath.content.substring(0,
                     portPath.matcher.start(1)) + port + portPath.content.substring(portPath.matcher.end(1));
             Files.writeString(portPath.path, newContent);
@@ -129,9 +178,9 @@ public class NodeServersServiceImpl implements NodeServersService {
     @Transactional
     public NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception {
         NodeServer nodeServer =
-                fillNpmProjectAndChildrenThenMap(nodeServerCreatedOrUpdated);
+                checkAndFill(nodeServerCreatedOrUpdated);
         nodeServerRepository.save(nodeServer);
-        return fillThenMap(nodeServer);
+        return map(nodeServer);
     }
 
     @Override
@@ -224,21 +273,9 @@ public class NodeServersServiceImpl implements NodeServersService {
         List<NodeServer> nodeServers = nodeServerRepository.findAll();
         List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
         for (NodeServer nodeServer : nodeServers) {
-            nodeServerResponses.add(fillThenMap(nodeServer));
+            nodeServerResponses.add(map(nodeServer));
         }
         return nodeServerResponses;
-    }
-
-    private NodeServerResponse fillPort(NodeServerResponse nodeServerResponse,
-                                        NodeServer nodeServer) throws Exception {
-        PortPath portPath = getPortAndFile(nodeServer);
-        if (!portPath.matcher.find()) {
-            throw new RuntimeException("can not find port in file: " + portPath.path + " " +
-                    "with reg: " + portPath.portReg);
-        }
-
-        nodeServerResponse.setPort(Integer.parseInt(portPath.matcher.group(1)));
-        return nodeServerResponse;
     }
 
     @Override
@@ -268,8 +305,11 @@ public class NodeServersServiceImpl implements NodeServersService {
         return Paths.get(tmpDir, name + ".log");
     }
 
-    @AllArgsConstructor
+    static
     class PortPath {
+        String errorMsg = null;
+
+        ErrorField errorField = null;
         Path path;
         String portReg;
         Matcher matcher;

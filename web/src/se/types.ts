@@ -22,11 +22,15 @@ export interface CommonNodeServer {
   npmProjectId: number;
 }
 
+type ErrorField = "PROJECT_PATH" | "PORT_CONFIG_FILE" | "PORT_REG";
+
 export interface NodeServerResponse extends CommonNodeServer {
   id: number;
   port: string;
   postServerIds?: number[];
   prevServerId?: number;
+  errorMsg?: string;
+  errorField: ErrorField;
 }
 
 export type NodeServerState = {

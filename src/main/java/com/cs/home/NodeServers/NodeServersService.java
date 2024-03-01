@@ -19,7 +19,7 @@ public interface NodeServersService {
 
     List<NodeServerResponse> servers() throws Exception;
 
-    NodeServerResponse fillThenMap(NodeServer nodeServer) throws Exception;
+    NodeServerResponse map(NodeServer nodeServer) throws Exception;
 
 
     List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception;
@@ -27,4 +27,5 @@ public interface NodeServersService {
     void clearLog(Integer nodeServerId) throws IOException;
 
     void changePort(Integer nodeServerId, Integer port) throws IOException;
+
 }

@@ -7,7 +7,7 @@ import wyw from '@wyw-in-js/vite';
 export default defineConfig({
   build: {
     target: ['es2020', 'edge88', 'chrome87'],
-    outDir: '../public',
+    outDir: '../src/main/resources',
     // rollupOptions: {
     //   output: {
     //     manualChunks: {

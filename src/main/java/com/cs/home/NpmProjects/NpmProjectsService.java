@@ -19,4 +19,6 @@ public interface NpmProjectsService {
 
     void openNpmProject(Integer npmProjectId) throws IOException;
 
+    void locateErrorWithVscode(String path) throws IOException;
+
 }

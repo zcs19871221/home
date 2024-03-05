@@ -90,7 +90,14 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
                 npmProjectsRepository.getReferenceById(npmProjectId);
         String path = URLDecoder.decode(npmProject.getPath(), StandardCharsets.UTF_8);
 
-        vsCode(path);
+        ProcessBuilder p = new ProcessBuilder("code.cmd", path);
+        p.start();
+    }
+
+    @Override
+    public void locateErrorWithVscode(String path) throws IOException {
+        ProcessBuilder p = new ProcessBuilder("code.cmd", "-g", path);
+        p.start();
     }
 
     @Override

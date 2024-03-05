@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -42,6 +44,13 @@ public class NpmProjectsController {
     @GetMapping("/vscode/{npmProjectId}")
     public Response<String> vscode(@PathVariable Integer npmProjectId) throws IOException {
         service.openNpmProject(npmProjectId);
+        return Response.EmptyResponse();
+    }
+
+    @GetMapping("/vscodeError/{path}")
+    public Response<String> vscodeError(@PathVariable String path) throws IOException {
+        String p = URLDecoder.decode(path, StandardCharsets.UTF_8);
+        service.locateErrorWithVscode(p);
         return Response.EmptyResponse();
     }
 

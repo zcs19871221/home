@@ -28,5 +28,6 @@ public interface NodeServersService {
 
     void changePort(Integer nodeServerId, Integer port) throws IOException;
 
+    String logs(Integer nodeServerId);
 
 }

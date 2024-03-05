@@ -62,6 +62,13 @@ public class NodeServerController {
         return Response.create(nodeServersService.serverRunningInfos());
     }
 
+    @GetMapping("/logs/{nodeServerId}")
+    @ResponseBody
+    String logs(@PathVariable Integer nodeServerId) {
+        return nodeServersService.logs(nodeServerId);
+    }
+
+
     @GetMapping("/clearLog/{nodeServerId}")
     Response<String> clearLog(@PathVariable Integer nodeServerId) throws Exception {
         nodeServersService.clearLog(nodeServerId);

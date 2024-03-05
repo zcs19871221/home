@@ -171,6 +171,14 @@ public class NodeServersServiceImpl implements NodeServersService {
         }
     }
 
+    @Override
+    public String logs(Integer nodeServerId) {
+        if (idMapServerProcess.containsKey(nodeServerId)) {
+            return idMapServerProcess.get(nodeServerId).getLog();
+        }
+        return "";
+    }
+
     private void doClearLog(ProcessInfo processInfo) throws IOException {
         if (processInfo != null) {
             Files.writeString(processInfo.getLogFile().toPath(), "");
@@ -269,8 +277,8 @@ public class NodeServersServiceImpl implements NodeServersService {
                     continue;
                 }
 
-                if (strLine.contains("success") || strLine.contains("message:" +
-                        " 'start at ") || strLine.contains("started at")) {
+
+                if (strLine.contains("success") || strLine.contains("api server started at") || strLine.contains(" message: 'start at ")) {
                     processInfo.status = NodeServerStatus.SUCCESS;
                 }
             }

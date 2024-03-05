@@ -90,6 +90,9 @@ function Se() {
 
   const [groupByNpmProject, setGroupByNpmProject] = useState(false);
 
+  const [logs, setLogs] = useState<{
+    [nodeServerId: number]: string;
+  }>({});
   const { data: nodeServerInfo, mutate: refetchLogInfos } = useSWR<{
     [id: number]: LogInfo;
   }>(`${base}/api/nodeServers/runningInfos`, {
@@ -97,6 +100,41 @@ function Se() {
     revalidateOnMount: true,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
+    onSuccess: async (data) => {
+      const nodeServerIds: string[] = Object.keys(data);
+      const responseLogs = await Promise.all(
+        nodeServerIds.map((nodeServerId) =>
+          // const id = nodeServerId;
+          // // const npmProjectPath = npmProjects?.find((n) =>
+          // //   n.nodeServers.some((s) => String(s.id) === String(id)),
+          // // )?.path;
+          fetch(`${base}/api/nodeServers/logs/${nodeServerId}`, {
+            method: 'GET',
+          })
+            .then((response) => response.body?.getReader()?.read())
+            .then((res) => {
+              if (res?.value) {
+                return new TextDecoder()
+                  .decode(res.value)
+                  .replace(
+                    /ERROR in ([^(]+)\((\d+),(\d+)\)/g,
+                    (_match, locate, row, col) =>
+                      `<span class="jump" data-href="/api/vscodeError/${encodeURIComponent(`${locate}:${row}:${col}`)}">${_match}</span>`,
+                  );
+              }
+
+              return '';
+            }),
+        ),
+      );
+      const newLogs: {
+        [nodeServerId: string]: string;
+      } = {};
+      responseLogs.forEach((log, index) => {
+        newLogs[nodeServerIds[index]] = log;
+      });
+      setLogs(newLogs);
+    },
     ...(!groupByNpmProject && { refreshInterval: 1000 }),
   });
 
@@ -607,7 +645,7 @@ function Se() {
               white-space: pre-wrap;
             `}
           >
-            {nodeServerInfo[currentNodeServer]?.log}
+            {logs[currentNodeServer]}
           </div>
         )}
       </Modal>

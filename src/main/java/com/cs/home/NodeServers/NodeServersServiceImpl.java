@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,7 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class NodeServersServiceImpl implements NodeServersService {
-    private final Map<Integer, ProcessInfo> idMapServerProcess = new HashMap<>();
+    private static final ConcurrentHashMap<Integer, ProcessInfo> idMapServerProcess =
+            new ConcurrentHashMap<>();
 
     private final NodeServerRepository nodeServerRepository;
 
@@ -227,6 +229,8 @@ public class NodeServersServiceImpl implements NodeServersService {
                 nodeServer.getPostServers() == null ?
                         new ArrayList<>() :
                         nodeServer.getPostServers().stream().map(NodeServer::getId).collect(Collectors.toList()));
+        processInfo.setPath(nodeServer.getNpmProject().getPath());
+        processInfo.setCommand(nodeServer.getCommand());
         idMapServerProcess.put(nodeServerId, processInfo);
 
 
@@ -239,6 +243,7 @@ public class NodeServersServiceImpl implements NodeServersService {
                         throw new RuntimeException(e);
                     }
                 }
+                System.exit(0);
             }));
             shutDownhook = true;
         }
@@ -306,17 +311,26 @@ public class NodeServersServiceImpl implements NodeServersService {
             return;
         }
 
+
         ProcessInfo processInfo = idMapServerProcess.get(nodeServerId);
+
+        for (Integer postServerId : processInfo.getPostServerIds()) {
+            stopServer(postServerId);
+        }
+
+        System.out.println("stopping " + processInfo.getPath() + " " + processInfo.getCommand());
+
         Process process = processInfo.getProcess();
         process.descendants().forEach(ProcessHandle::destroy);
         process.destroy();
 
+
         processInfo.getReadStream().close();
         doClearLog(processInfo);
+
         idMapServerProcess.remove(nodeServerId);
-        for (Integer postServerId : processInfo.getPostServerIds()) {
-            stopServer(postServerId);
-        }
+        System.out.println(processInfo.getId() + processInfo.getPath() + " " + processInfo.getCommand());
+
     }
 
     @Override

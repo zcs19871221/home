@@ -1,4 +1,5 @@
 import { css } from '@linaria/core';
+import { ExclamationCircleFilled } from '@ant-design/icons';
 import {
   Button,
   Form,
@@ -13,7 +14,7 @@ import {
   Tooltip,
   message,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { DisabledContextProvider } from 'antd/es/config-provider/DisabledContext';
 import { InnerForm } from './InnerForm.tsx';
@@ -28,6 +29,22 @@ import {
 import useNpmProjects, { base } from './useNpmProjects.ts';
 import { DebouncedInput } from './useDebouncedValue.tsx';
 import request from './request.tsx';
+
+interface LogNode {
+  [nodeServerId: string]: { nodes: ReactNode[]; rawLogs: string };
+}
+
+function LogText({ nodes }: { nodes: ReactNode[] }) {
+  return (
+    <div
+      className={css`
+        white-space: pre-wrap;
+      `}
+    >
+      {nodes}
+    </div>
+  );
+}
 
 function Se() {
   const { data: npmProjects, mutate: refetchNpmProjects } = useNpmProjects();
@@ -90,48 +107,62 @@ function Se() {
 
   const [groupByNpmProject, setGroupByNpmProject] = useState(false);
 
-  const [logs, setLogs] = useState<{
-    [nodeServerId: number]: string;
-  }>({});
+  const [logs, setLogs] = useState<LogNode>({});
   const { data: nodeServerInfo, mutate: refetchLogInfos } = useSWR<{
     [id: number]: LogInfo;
   }>(`${base}/api/nodeServers/runningInfos`, {
-    revalidateIfStale: true,
-    revalidateOnMount: true,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
+    revalidateIfStale: false,
+    revalidateOnMount: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
     onSuccess: async (data) => {
       const nodeServerIds: string[] = Object.keys(data);
-      const responseLogs = await Promise.all(
-        nodeServerIds.map((nodeServerId) =>
-          // const id = nodeServerId;
-          // // const npmProjectPath = npmProjects?.find((n) =>
-          // //   n.nodeServers.some((s) => String(s.id) === String(id)),
-          // // )?.path;
-          fetch(`${base}/api/nodeServers/logs/${nodeServerId}`, {
-            method: 'GET',
-          })
-            .then((response) => response.body?.getReader()?.read())
-            .then((res) => {
-              if (res?.value) {
-                return new TextDecoder()
-                  .decode(res.value)
-                  .replace(
+      const responseLogs: (readonly [ReactNode[], string])[] =
+        await Promise.all(
+          nodeServerIds.map((nodeServerId) =>
+            fetch(`${base}/api/nodeServers/logs/${nodeServerId}`, {
+              method: 'GET',
+            })
+              .then((response) => response.body?.getReader()?.read())
+              .then((res) => {
+                const htmlParts: ReactNode[] = [];
+                let rawLogs = '';
+                if (res?.value) {
+                  rawLogs = new TextDecoder().decode(res.value);
+                  let index = 0;
+                  rawLogs.replace(
                     /ERROR in ([^(]+)\((\d+),(\d+)\)/g,
-                    (_match, locate, row, col) =>
-                      `<span class="jump" data-href="/api/vscodeError/${encodeURIComponent(`${locate}:${row}:${col}`)}">${_match}</span>`,
+                    (_match, locate, row, col, offset) => {
+                      htmlParts.push(rawLogs.slice(index, offset));
+                      index = offset + _match.length;
+                      htmlParts.push(
+                        <a
+                          className={css`
+                            color: red;
+                          `}
+                          href={`/api/vscodeError/${encodeURIComponent(`${locate}:${row}:${col}`)}`}
+                          target="_blank"
+                        >
+                          ${_match}
+                        </a>,
+                      );
+                      return _match;
+                    },
                   );
-              }
+                  htmlParts.push(rawLogs.slice(index));
+                }
 
-              return '';
-            }),
-        ),
-      );
-      const newLogs: {
-        [nodeServerId: string]: string;
-      } = {};
+                return [htmlParts, rawLogs] as const;
+              }),
+          ),
+        );
+      const newLogs: LogNode = {};
       responseLogs.forEach((log, index) => {
-        newLogs[nodeServerIds[index]] = log;
+        const id = nodeServerIds[index];
+        newLogs[id] = {
+          rawLogs: log[1],
+          nodes: log[0],
+        };
       });
       setLogs(newLogs);
     },
@@ -454,6 +485,21 @@ function Se() {
             </Button>
           </>
         )}
+        <Button
+          onClick={() => {
+            Modal.confirm({
+              title: '是否关闭控制台？',
+              icon: <ExclamationCircleFilled />,
+              content: '关闭后台运行进程',
+              onOk() {
+                request('/api/npmProjects/shutdown', 'PUT');
+              },
+            });
+          }}
+          type="link"
+        >
+          关闭控制台
+        </Button>
       </Space>
       {!groupByNpmProject && rootNodeServerResponses.length > 0 && (
         <Table
@@ -640,13 +686,10 @@ function Se() {
         centered
       >
         {currentNodeServer && nodeServerInfo && (
-          <div
-            className={css`
-              white-space: pre-wrap;
-            `}
-          >
-            {logs[currentNodeServer]}
-          </div>
+          <LogText
+            key={logs[currentNodeServer]?.rawLogs}
+            nodes={logs[currentNodeServer]?.nodes}
+          />
         )}
       </Modal>
     </div>

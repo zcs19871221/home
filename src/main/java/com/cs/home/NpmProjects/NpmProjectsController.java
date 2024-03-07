@@ -18,6 +18,12 @@ public class NpmProjectsController {
 
     private final NpmProjectsService service;
 
+    @PutMapping("/shutdown")
+    public Response<String> shutDown() {
+        System.exit(0);
+        return Response.create("");
+    }
+
     @GetMapping
     public Response<List<NpmProjectResponse>> list() throws Exception {
         List<NpmProjectResponse> seResponses = service.list();

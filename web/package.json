@@ -41,6 +41,7 @@
     }
   },
   "dependencies": {
+    "@ant-design/icons": "^5.2.6",
     "@linaria/core": "^6.0.0",
     "@linaria/react": "^6.0.0",
     "antd": "^5.13.1",

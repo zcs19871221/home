@@ -35,7 +35,7 @@ function LogText({ rawLogs }: { rawLogs?: string }) {
   const htmlParts: ReactNode[] = [];
   let index = 0;
   rawLogs?.replace(
-    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)|(?:SyntaxError (.*?): .*?\((\d+),(\d+)\))|/gi,
+    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
     (_match, locate, row, col, errorText, offset) => {
       htmlParts.push(rawLogs.slice(index, offset));
       index = offset + _match.length;
@@ -179,18 +179,16 @@ function Se() {
     bufferFetcher,
     {
       ...(!currentNodeServer !== null && { refreshInterval: 2000 }),
+      revalidateIfStale: true,
+      revalidateOnFocus: true,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
     },
   );
 
   useEffect(() => {
     refetchServerInfo();
   }, [refetchServerInfo]);
-
-  useEffect(() => {
-    if (currentNodeServer) {
-      refetchLog();
-    }
-  }, [currentNodeServer, refetchLog]);
 
   const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
     request(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
@@ -372,48 +370,39 @@ function Se() {
                 >
                   vscode
                 </Button>
-                {(!info || info.status === NodeServerStatus.CLOSED) && (
-                  <Button
-                    type="link"
-                    onClick={() =>
-                      operator('start', record.id as number).then(() =>
-                        refetchServerInfo(),
-                      )
-                    }
-                  >
-                    启动
-                  </Button>
-                )}
-                {info && (
-                  <>
-                    <Button
-                      type="link"
-                      onClick={() => {
-                        setCurrentNodeServer(record.id ?? null);
-                      }}
-                    >
-                      日志
-                    </Button>
-                    <Button
-                      type="link"
-                      onClick={() =>
-                        operator('restart', record.id).then(() =>
-                          refetchServerInfo(),
-                        )
-                      }
-                    >
-                      重启
-                    </Button>
-                    {info.status !== NodeServerStatus.CLOSED && (
-                      <Button
-                        type="link"
-                        onClick={() => operator('stop', record.id)}
-                      >
-                        关闭
-                      </Button>
-                    )}
-                  </>
-                )}
+                <Button
+                  type="link"
+                  onClick={() =>
+                    operator('start', record.id as number).then(() =>
+                      refetchServerInfo(),
+                    )
+                  }
+                >
+                  启动
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() => {
+                    setCurrentNodeServer(record.id ?? null);
+                  }}
+                  disabled={!info}
+                >
+                  日志
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() =>
+                    operator('restart', record.id).then(() =>
+                      refetchServerInfo(),
+                    )
+                  }
+                >
+                  重启
+                </Button>
+
+                <Button type="link" onClick={() => operator('stop', record.id)}>
+                  关闭
+                </Button>
               </DisabledContextProvider>
             )}
           </Space>

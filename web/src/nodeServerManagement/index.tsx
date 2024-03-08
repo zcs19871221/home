@@ -102,7 +102,7 @@ const bufferFetcher = (url: string) =>
         .replace(/\[33m/g, '')
         .replace(/\[39m/g, '')
         .replace(//g, '')
-        .replace(/(\x00)+/g, ' '),
+        .replace(/(\x00)+/g, '\n'),
     );
 
 function Se() {

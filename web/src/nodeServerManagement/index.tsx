@@ -35,7 +35,7 @@ function LogText({ rawLogs }: { rawLogs?: string }) {
   const htmlParts: ReactNode[] = [];
   let index = 0;
   rawLogs?.replace(
-    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
+    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)|(?:SyntaxError (.*?): .*?\((\d+),(\d+)\))|/gi,
     (_match, locate, row, col, errorText, offset) => {
       htmlParts.push(rawLogs.slice(index, offset));
       index = offset + _match.length;
@@ -185,6 +185,12 @@ function Se() {
   useEffect(() => {
     refetchServerInfo();
   }, [refetchServerInfo]);
+
+  useEffect(() => {
+    if (currentNodeServer) {
+      refetchLog();
+    }
+  }, [currentNodeServer, refetchLog]);
 
   const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
     request(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
@@ -384,7 +390,6 @@ function Se() {
                       type="link"
                       onClick={() => {
                         setCurrentNodeServer(record.id ?? null);
-                        refetchLog();
                       }}
                     >
                       日志

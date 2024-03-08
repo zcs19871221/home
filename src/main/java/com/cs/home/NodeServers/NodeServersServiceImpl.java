@@ -284,7 +284,7 @@ public class NodeServersServiceImpl implements NodeServersService {
                 }
 
 
-                if (strLine.contains("success") || strLine.contains("api server started at") || strLine.contains(" message: 'start at ")) {
+                if (strLine.contains(" result: 200 200") || strLine.contains("api server started at") || strLine.contains(" message: 'start at ")) {
                     processInfo.setStatus(NodeServerStatus.SUCCESS);
                 }
             }

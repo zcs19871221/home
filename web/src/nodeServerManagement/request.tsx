@@ -6,12 +6,14 @@ const request = async (
   url: string,
   method: 'POST' | 'PUT' | 'DELETE' | 'GET',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: Record<string, any>,
+  body?: Record<string, any> | string,
 ) => {
   try {
     const res = await window.fetch(`${base}${url}`, {
       method,
-      ...(body && { body: JSON.stringify(body) }),
+      ...(body && {
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+      }),
       headers: {
         'Content-Type': 'application/json',
       },

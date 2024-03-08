@@ -173,18 +173,10 @@ public class NodeServersServiceImpl implements NodeServersService {
         }
     }
 
-    @Override
-    public String logs(Integer nodeServerId) {
-        if (idMapServerProcess.containsKey(nodeServerId)) {
-            return idMapServerProcess.get(nodeServerId).getLog();
-        }
-        return "";
-    }
 
     private void doClearLog(ProcessInfo processInfo) throws IOException {
         if (processInfo != null) {
             Files.writeString(processInfo.getLogFile().toPath(), "");
-            processInfo.log = "";
         }
     }
 
@@ -255,42 +247,52 @@ public class NodeServersServiceImpl implements NodeServersService {
     }
 
     @Override
-    public Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException {
+    public String logs(Integer nodeServerId) throws IOException {
+        if (idMapServerProcess.containsKey(nodeServerId)) {
+            ProcessInfo processInfo = idMapServerProcess.get(nodeServerId);
+            return Files.readString(processInfo.getLogFile().toPath());
+        }
+        return "";
+    }
+
+    @Override
+    public synchronized Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException {
 
         for (Map.Entry<Integer, ProcessInfo> numberProcessInfoEntry :
                 idMapServerProcess.entrySet()) {
             ProcessInfo processInfo = numberProcessInfoEntry.getValue();
-            StringBuilder sb = new StringBuilder();
 
             String strLine;
 
+            StringBuilder newStr = new StringBuilder();
+            boolean needCleanLog = false;
             while ((strLine = processInfo.getBr().readLine()) != null) {
-                sb.append(strLine);
-                sb.append("\n");
-
+                newStr.append(strLine);
                 if (strLine.contains("Compiling ")) {
-                    processInfo.status = NodeServerStatus.COMPILING;
-                    processInfo.log = "";
+                    newStr = new StringBuilder(strLine);
+                    processInfo.setStatus(NodeServerStatus.COMPILING);
+                    needCleanLog = true;
                     continue;
                 }
 
-                Pattern pattern = Pattern.compile("err(or)?",
+                Pattern pattern = Pattern.compile("\\berr(or)?\\b",
                         Pattern.CASE_INSENSITIVE);
                 Matcher matcher = pattern.matcher(strLine);
                 if (matcher.find()) {
-                    processInfo.status = NodeServerStatus.ERROR;
+                    processInfo.setStatus(NodeServerStatus.ERROR);
                     continue;
                 }
 
 
                 if (strLine.contains("success") || strLine.contains("api server started at") || strLine.contains(" message: 'start at ")) {
-                    processInfo.status = NodeServerStatus.SUCCESS;
+                    processInfo.setStatus(NodeServerStatus.SUCCESS);
                 }
             }
 
-            if (!sb.isEmpty()) {
-                processInfo.log += sb.toString();
+            if (needCleanLog) {
+                Files.writeString(processInfo.getLogFile().toPath(), newStr);
             }
+
         }
         return nodeServerMapper.map(idMapServerProcess);
     }
@@ -325,6 +327,7 @@ public class NodeServersServiceImpl implements NodeServersService {
         process.destroy();
 
 
+        processInfo.getBr().close();
         processInfo.getReadStream().close();
         doClearLog(processInfo);
 

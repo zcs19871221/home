@@ -18,7 +18,6 @@ public interface NodeServerMapper {
     @Mapping(target = "npmProjectId", source = "npmProject", ignore = true)
     NodeServerResponse map(NodeServer nodeServer);
 
-    @Mapping(target = "npmProjectId", source = "npmProject", ignore = true)
     Map<Integer, NodeServerRunningInfo> map(Map<Integer, ProcessInfo> nodeServer);
 
     void merge(NodeServer source, @MappingTarget NodeServer target);

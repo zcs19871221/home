@@ -64,7 +64,7 @@ public class NodeServerController {
 
     @GetMapping("/logs/{nodeServerId}")
     @ResponseBody
-    String logs(@PathVariable Integer nodeServerId) {
+    String logs(@PathVariable Integer nodeServerId) throws Exception {
         return nodeServersService.logs(nodeServerId);
     }
 

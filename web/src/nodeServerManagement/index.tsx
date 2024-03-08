@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 import { css } from '@linaria/core';
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import {
@@ -14,7 +15,7 @@ import {
   Tooltip,
   message,
 } from 'antd';
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { DisabledContextProvider } from 'antd/es/config-provider/DisabledContext';
 import { InnerForm } from './InnerForm.tsx';
@@ -30,21 +31,79 @@ import useNpmProjects, { base } from './useNpmProjects.ts';
 import { DebouncedInput } from './useDebouncedValue.tsx';
 import request from './request.tsx';
 
-interface LogNode {
-  [nodeServerId: string]: { nodes: ReactNode[]; rawLogs: string };
-}
+function LogText({ rawLogs }: { rawLogs?: string }) {
+  const htmlParts: ReactNode[] = [];
+  let index = 0;
+  rawLogs?.replace(
+    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
+    (_match, locate, row, col, errorText, offset) => {
+      htmlParts.push(rawLogs.slice(index, offset));
+      index = offset + _match.length;
 
-function LogText({ nodes }: { nodes: ReactNode[] }) {
+      if (errorText) {
+        htmlParts.push(
+          <span
+            className={css`
+              color: red;
+            `}
+          >
+            {errorText}
+          </span>,
+        );
+        return _match;
+      }
+      htmlParts.push(
+        <Button
+          className={css`
+            color: red;
+          `}
+          type="link"
+          onClick={() => {
+            request(
+              '/api/npmProjects/vscodeError',
+              'PUT',
+              encodeURIComponent(`${locate}:${row}:${col}`),
+            );
+          }}
+          target="_blank"
+        >
+          {_match}
+        </Button>,
+      );
+      return _match;
+    },
+  );
+  if (rawLogs) {
+    htmlParts.push(rawLogs.slice(index));
+  }
   return (
     <div
       className={css`
-        white-space: pre-wrap;
+        white-space: pre-line;
       `}
     >
-      {nodes}
+      {htmlParts}
     </div>
   );
 }
+
+const bufferFetcher = (url: string) =>
+  fetch(url, {
+    method: 'GET',
+  })
+    .then((response) => response.body?.getReader()?.read())
+    .then((res) =>
+      new TextDecoder()
+        .decode(res?.value)
+        .replace(/\[1m/g, '')
+        .replace(/\\x1B/g, '')
+        .replace(/\[22m/g, '')
+        .replace(/\[32m/g, '')
+        .replace(/\[33m/g, '')
+        .replace(/\[39m/g, '')
+        .replace(//g, '')
+        .replace(/(\x00)+/g, ' '),
+    );
 
 function Se() {
   const { data: npmProjects, mutate: refetchNpmProjects } = useNpmProjects();
@@ -107,67 +166,25 @@ function Se() {
 
   const [groupByNpmProject, setGroupByNpmProject] = useState(false);
 
-  const [logs, setLogs] = useState<LogNode>({});
-  const { data: nodeServerInfo, mutate: refetchLogInfos } = useSWR<{
-    [id: number]: LogInfo;
+  const { data: nodeServerInfo, mutate: refetchServerInfo } = useSWR<{
+    [nodeServerId: number]: LogInfo;
   }>(`${base}/api/nodeServers/runningInfos`, {
-    revalidateIfStale: false,
-    revalidateOnMount: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    onSuccess: async (data) => {
-      const nodeServerIds: string[] = Object.keys(data);
-      const responseLogs: (readonly [ReactNode[], string])[] =
-        await Promise.all(
-          nodeServerIds.map((nodeServerId) =>
-            fetch(`${base}/api/nodeServers/logs/${nodeServerId}`, {
-              method: 'GET',
-            })
-              .then((response) => response.body?.getReader()?.read())
-              .then((res) => {
-                const htmlParts: ReactNode[] = [];
-                let rawLogs = '';
-                if (res?.value) {
-                  rawLogs = new TextDecoder().decode(res.value);
-                  let index = 0;
-                  rawLogs.replace(
-                    /ERROR in ([^(]+)\((\d+),(\d+)\)/g,
-                    (_match, locate, row, col, offset) => {
-                      htmlParts.push(rawLogs.slice(index, offset));
-                      index = offset + _match.length;
-                      htmlParts.push(
-                        <a
-                          className={css`
-                            color: red;
-                          `}
-                          href={`/api/vscodeError/${encodeURIComponent(`${locate}:${row}:${col}`)}`}
-                          target="_blank"
-                        >
-                          ${_match}
-                        </a>,
-                      );
-                      return _match;
-                    },
-                  );
-                  htmlParts.push(rawLogs.slice(index));
-                }
-
-                return [htmlParts, rawLogs] as const;
-              }),
-          ),
-        );
-      const newLogs: LogNode = {};
-      responseLogs.forEach((log, index) => {
-        const id = nodeServerIds[index];
-        newLogs[id] = {
-          rawLogs: log[1],
-          nodes: log[0],
-        };
-      });
-      setLogs(newLogs);
-    },
-    ...(!groupByNpmProject && { refreshInterval: 1000 }),
+    ...(!groupByNpmProject && { refreshInterval: 2000 }),
   });
+
+  const { data: log, mutate: refetchLog } = useSWR(
+    currentNodeServer
+      ? `${base}/api/nodeServers/logs/${currentNodeServer}`
+      : undefined,
+    bufferFetcher,
+    {
+      ...(!currentNodeServer !== null && { refreshInterval: 2000 }),
+    },
+  );
+
+  useEffect(() => {
+    refetchServerInfo();
+  }, [refetchServerInfo]);
 
   const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
     request(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
@@ -353,9 +370,9 @@ function Se() {
                   <Button
                     type="link"
                     onClick={() =>
-                      operator('start', record.id as number).then(() => {
-                        refetchLogInfos();
-                      })
+                      operator('start', record.id as number).then(() =>
+                        refetchServerInfo(),
+                      )
                     }
                   >
                     启动
@@ -365,16 +382,19 @@ function Se() {
                   <>
                     <Button
                       type="link"
-                      onClick={() => setCurrentNodeServer(record.id ?? null)}
+                      onClick={() => {
+                        setCurrentNodeServer(record.id ?? null);
+                        refetchLog();
+                      }}
                     >
                       日志
                     </Button>
                     <Button
                       type="link"
                       onClick={() =>
-                        operator('restart', record.id).then(() => {
-                          refetchLogInfos();
-                        })
+                        operator('restart', record.id).then(() =>
+                          refetchServerInfo(),
+                        )
                       }
                     >
                       重启
@@ -650,7 +670,7 @@ function Se() {
         />
       </Modal>
       <Modal
-        open={currentNodeServer !== null}
+        open={currentNodeServer !== null && nodeServerInfo !== undefined}
         onCancel={() => setCurrentNodeServer(null)}
         footer={null}
         title={
@@ -669,7 +689,10 @@ function Se() {
             <Button
               type="link"
               onClick={() =>
-                request(`/api/nodeServers/clearLog/${currentNodeServer}`, 'GET')
+                request(
+                  `/api/nodeServers/clearLog/${currentNodeServer}`,
+                  'GET',
+                ).then(() => refetchLog())
               }
             >
               清除日志
@@ -685,12 +708,7 @@ function Se() {
         }}
         centered
       >
-        {currentNodeServer && nodeServerInfo && (
-          <LogText
-            key={logs[currentNodeServer]?.rawLogs}
-            nodes={logs[currentNodeServer]?.nodes}
-          />
-        )}
+        <LogText rawLogs={log} />
       </Modal>
     </div>
   );

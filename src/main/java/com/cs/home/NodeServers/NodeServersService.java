@@ -17,6 +17,9 @@ public interface NodeServersService {
 
     Map<Integer, NodeServerRunningInfo> serverRunningInfos() throws IOException;
 
+    String logs(Integer nodeServerId) throws IOException;
+
+
     List<NodeServerResponse> servers() throws Exception;
 
     NodeServerResponse map(NodeServer nodeServer) throws Exception;
@@ -28,6 +31,5 @@ public interface NodeServersService {
 
     void changePort(Integer nodeServerId, Integer port) throws IOException;
 
-    String logs(Integer nodeServerId);
 
 }

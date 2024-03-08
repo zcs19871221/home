@@ -20,9 +20,8 @@ public class ProcessInfo {
     private final Integer prevServerId;
     private final List<Integer> postServerIds;
 
-    public String log = "";
-    public NodeServerStatus status = NodeServerStatus.CLOSED;
-    public Integer id;
+    private NodeServerStatus status = NodeServerStatus.CLOSED;
+    private Integer id;
 
     private String command;
     private String path;

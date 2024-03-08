@@ -53,8 +53,8 @@ public class NpmProjectsController {
         return Response.EmptyResponse();
     }
 
-    @GetMapping("/vscodeError/{path}")
-    public Response<String> vscodeError(@PathVariable String path) throws IOException {
+    @PutMapping("/vscodeError")
+    public Response<String> vscodeError(@RequestBody String path) throws IOException {
         String p = URLDecoder.decode(path, StandardCharsets.UTF_8);
         service.locateErrorWithVscode(p);
         return Response.EmptyResponse();

@@ -1,15 +1,14 @@
-import { FormInstance } from "antd";
+import { FormInstance } from 'antd';
 
 export enum NodeServerStatus {
-  CLOSED = "CLOSED",
-  COMPILING = "COMPILING",
-  ERROR = "ERROR",
-  SUCCESS = "SUCCESS",
-  UNKNOWN = "UNKNOWN",
+  CLOSED = 'CLOSED',
+  COMPILING = 'COMPILING',
+  ERROR = 'ERROR',
+  SUCCESS = 'SUCCESS',
+  UNKNOWN = 'UNKNOWN',
 }
 
 export interface LogInfo {
-  log: string;
   status: NodeServerStatus;
   id: number;
 }
@@ -22,7 +21,7 @@ export interface CommonNodeServer {
   npmProjectId: number;
 }
 
-type ErrorField = "PROJECT_PATH" | "PORT_CONFIG_FILE" | "PORT_REG";
+type ErrorField = 'PROJECT_PATH' | 'PORT_CONFIG_FILE' | 'PORT_REG';
 
 export interface NodeServerResponse extends CommonNodeServer {
   id: number;

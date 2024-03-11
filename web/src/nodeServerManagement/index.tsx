@@ -431,6 +431,7 @@ function NodeServerManagement() {
     let id = 1;
     const htmlParts: ReactNode[] = [];
     let index = 0;
+
     log?.replace(
       /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
       (_match, locate, row, col, errorText, offset) => {
@@ -469,8 +470,12 @@ function NodeServerManagement() {
         return _match;
       },
     );
+    if (log) {
+      htmlParts.push(log.slice(index));
+    }
     return [htmlParts, ids];
   }, [log]);
+
   return (
     <div>
       <Space

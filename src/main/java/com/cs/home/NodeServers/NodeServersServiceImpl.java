@@ -250,7 +250,9 @@ public class NodeServersServiceImpl implements NodeServersService {
     public String logs(Integer nodeServerId) throws IOException {
         if (idMapServerProcess.containsKey(nodeServerId)) {
             ProcessInfo processInfo = idMapServerProcess.get(nodeServerId);
-            return Files.readString(processInfo.getLogFile().toPath());
+            var str = Files.readString(processInfo.getLogFile().toPath());
+            System.out.println(str.length());
+            return str;
         }
         return "";
     }

@@ -15,7 +15,7 @@ import {
   Tooltip,
   message,
 } from 'antd';
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { DisabledContextProvider } from 'antd/es/config-provider/DisabledContext';
 import { InnerForm } from './InnerForm.tsx';
@@ -29,83 +29,99 @@ import {
 } from './types.ts';
 import useNpmProjects, { base } from './useNpmProjects.ts';
 import { DebouncedInput } from './useDebouncedValue.tsx';
-import request from './request.tsx';
+import { jsonFetcher, bufferFetcher } from './fetcher.tsx';
 
-function LogText({ rawLogs }: { rawLogs?: string }) {
-  const htmlParts: ReactNode[] = [];
-  let index = 0;
-  rawLogs?.replace(
-    /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
-    (_match, locate, row, col, errorText, offset) => {
-      htmlParts.push(rawLogs.slice(index, offset));
-      index = offset + _match.length;
+const errorAnchorCls = css`
+  color: red;
+  display: inline;
+`;
 
-      if (errorText) {
-        htmlParts.push(
-          <span
-            className={css`
-              color: red;
-            `}
-          >
-            {errorText}
-          </span>,
-        );
-        return _match;
+const Status = ({
+  nodeServerInfo,
+  nodeServerId,
+  nodeServerName,
+  errorAnchorIds,
+}: {
+  nodeServerInfo?: {
+    [nodeServerId: number]: LogInfo;
+  };
+  nodeServerId?: number | null;
+  nodeServerName?: string;
+  errorAnchorIds?: string[];
+}) => {
+  let text = '';
+  let color: TagProps['color'] = 'processing';
+
+  const errorAnchorIndexRef = useRef(0);
+
+  if (
+    !nodeServerInfo ||
+    nodeServerId === undefined ||
+    nodeServerId === null ||
+    nodeServerInfo[nodeServerId]?.status === undefined
+  ) {
+    text = '未开启';
+    color = 'grey';
+  } else {
+    const status = nodeServerInfo[nodeServerId]?.status;
+
+    switch (status) {
+      case NodeServerStatus.CLOSED:
+        text = '已关闭';
+        color = 'grey';
+        break;
+      case NodeServerStatus.ERROR:
+        text = '错误';
+        color = 'error';
+        break;
+      case NodeServerStatus.COMPILING:
+        text = '编译中..';
+        color = 'processing';
+        break;
+      case NodeServerStatus.SUCCESS:
+        text = '成功';
+        color = 'success';
+        break;
+      case NodeServerStatus.UNKNOWN:
+        text = '未知';
+        color = 'warning';
+        break;
+      default: {
+        const error: never = status;
+        throw new Error(error);
       }
-      htmlParts.push(
-        <Button
-          className={css`
-            color: red;
-          `}
-          type="link"
-          onClick={() => {
-            request(
-              '/api/npmProjects/vscodeError',
-              'PUT',
-              encodeURIComponent(`${locate}:${row}:${col}`),
-            );
-          }}
-          target="_blank"
-        >
-          {_match}
-        </Button>,
-      );
-      return _match;
-    },
-  );
-  if (rawLogs) {
-    htmlParts.push(rawLogs.slice(index));
+    }
   }
+
   return (
-    <div
-      className={css`
-        white-space: pre-line;
-      `}
-    >
-      {htmlParts}
-    </div>
+    <>
+      <div>{nodeServerName ?? ''}</div>
+      <Tag
+        bordered={false}
+        color={color}
+        style={
+          errorAnchorIds?.length && errorAnchorIds?.length > 0
+            ? {
+                cursor: 'pointer',
+              }
+            : {}
+        }
+        onClick={() => {
+          if (!errorAnchorIds) {
+            return;
+          }
+          window.location.href = `#${errorAnchorIds?.[errorAnchorIndexRef.current]}`;
+          errorAnchorIndexRef.current =
+            (errorAnchorIndexRef.current + 1) % errorAnchorIds.length;
+        }}
+      >
+        {text}
+      </Tag>
+    </>
   );
-}
+};
 
-const bufferFetcher = (url: string) =>
-  fetch(url, {
-    method: 'GET',
-  })
-    .then((response) => response.body?.getReader()?.read())
-    .then((res) =>
-      new TextDecoder()
-        .decode(res?.value)
-        .replace(/\[1m/g, '')
-        .replace(/\\x1B/g, '')
-        .replace(/\[22m/g, '')
-        .replace(/\[32m/g, '')
-        .replace(/\[33m/g, '')
-        .replace(/\[39m/g, '')
-        .replace(//g, '')
-        .replace(/(\x00)+/g, '\n'),
-    );
-
-function Se() {
+function NodeServerManagement() {
   const { data: npmProjects, mutate: refetchNpmProjects } = useNpmProjects();
 
   const [nodeServerStates, setNodeServerStates] = useState<NodeServerState[]>(
@@ -166,12 +182,6 @@ function Se() {
 
   const [groupByNpmProject, setGroupByNpmProject] = useState(false);
 
-  const { data: nodeServerInfo, mutate: refetchServerInfo } = useSWR<{
-    [nodeServerId: number]: LogInfo;
-  }>(`${base}/api/nodeServers/runningInfos`, {
-    ...(!groupByNpmProject && { refreshInterval: 2000 }),
-  });
-
   const { data: log, mutate: refetchLog } = useSWR(
     currentNodeServer
       ? `${base}/api/nodeServers/logs/${currentNodeServer}`
@@ -186,82 +196,39 @@ function Se() {
     },
   );
 
-  useEffect(() => {
-    refetchServerInfo();
-  }, [refetchServerInfo]);
-
   const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
-    request(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
+    jsonFetcher(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
       message.success(`${type}指令已发送`);
     });
 
-  const renderStatus = (
-    nodeServerId?: number | null,
-    nodeServerName?: string,
-  ) => {
-    let text = '';
-    let color: TagProps['color'] = 'processing';
+  const { data: nodeServerInfo, mutate: refetchServerInfo } = useSWR<{
+    [nodeServerId: number]: LogInfo;
+  }>(`${base}/api/nodeServers/runningInfos`, {
+    ...(!groupByNpmProject && { refreshInterval: 2000 }),
+  });
 
-    if (
-      !nodeServerInfo ||
-      nodeServerId === undefined ||
-      nodeServerId === null ||
-      nodeServerInfo[nodeServerId]?.status === undefined
-    ) {
-      text = '未开启';
-      color = 'grey';
-    } else {
-      const status = nodeServerInfo[nodeServerId]?.status;
-
-      switch (status) {
-        case NodeServerStatus.CLOSED:
-          text = '已关闭';
-          color = 'grey';
-          break;
-        case NodeServerStatus.ERROR:
-          text = '错误';
-          color = 'error';
-          break;
-        case NodeServerStatus.COMPILING:
-          text = '编译中..';
-          color = 'processing';
-          break;
-        case NodeServerStatus.SUCCESS:
-          text = '成功';
-          color = 'success';
-          break;
-        case NodeServerStatus.UNKNOWN:
-          text = '未知';
-          color = 'warning';
-          break;
-        default: {
-          const error: never = status;
-          throw new Error(error);
-        }
-      }
-    }
-
-    return (
-      <Space
-        className={css`
-          display: flex;
-          align-items: center;
-        `}
-      >
-        <div>{nodeServerName ?? ''}</div>
-        <Tag bordered={false} color={color}>
-          {text}
-        </Tag>
-      </Space>
-    );
-  };
+  useEffect(() => {
+    refetchServerInfo();
+  }, [refetchServerInfo]);
 
   const nodeServerColumn = [
     {
       title: '名称',
       dataIndex: 'name',
-      render: (_value: unknown, record: NodeServerResponse) =>
-        renderStatus(record.id, record.name),
+      render: (_value: unknown, record: NodeServerResponse) => (
+        <Space
+          className={css`
+            display: flex;
+            align-items: center;
+          `}
+        >
+          <Status
+            nodeServerInfo={nodeServerInfo}
+            nodeServerId={record.id}
+            nodeServerName={record.name}
+          />
+        </Space>
+      ),
     },
 
     {
@@ -325,7 +292,7 @@ function Se() {
               if (String(text) === String(port)) {
                 return;
               }
-              request(
+              jsonFetcher(
                 `/api/nodeServers/changePort/${record.id}/${text}`,
                 'PUT',
               ).then(refetchNpmProjects);
@@ -346,7 +313,7 @@ function Se() {
                 title="删除服务"
                 description="是否要删除服务"
                 onConfirm={() => {
-                  request(`/api/nodeServers/${record.id}`, 'DELETE').then(
+                  jsonFetcher(`/api/nodeServers/${record.id}`, 'DELETE').then(
                     () => {
                       message.success('删除成功');
                       refetchNpmProjects();
@@ -362,7 +329,7 @@ function Se() {
                 <Button
                   type="link"
                   onClick={() =>
-                    request(
+                    jsonFetcher(
                       `/api/npmProjects/vscode/${record.npmProjectId}`,
                       'GET',
                     )
@@ -459,6 +426,51 @@ function Se() {
 
   const [openCreateNodeServer, setOpenCreateNodeServer] = useState(false);
 
+  const [html, errorAnchorIds] = useMemo(() => {
+    const ids: string[] = [];
+    let id = 1;
+    const htmlParts: ReactNode[] = [];
+    let index = 0;
+    log?.replace(
+      /(?:ERROR in ([^(]+)\((\d+),(\d+)\))|(\berror\b)/gi,
+      (_match, locate, row, col, errorText, offset) => {
+        htmlParts.push(log.slice(index, offset));
+        index = offset + _match.length;
+        const idKey = `error${id++}`;
+        ids.push(idKey);
+        if (errorText) {
+          htmlParts.push(
+            <h3 id={idKey} className={errorAnchorCls}>
+              {errorText}
+            </h3>,
+          );
+          return _match;
+        }
+        htmlParts.push(
+          <h3 id={idKey} className={errorAnchorCls}>
+            <Button
+              type="link"
+              className={css`
+                color: red;
+              `}
+              onClick={() => {
+                jsonFetcher(
+                  '/api/npmProjects/vscodeError',
+                  'PUT',
+                  encodeURIComponent(`${locate}:${row}:${col}`),
+                );
+              }}
+              target="_blank"
+            >
+              {_match}
+            </Button>
+          </h3>,
+        );
+        return _match;
+      },
+    );
+    return [htmlParts, ids];
+  }, [log]);
   return (
     <div>
       <Space
@@ -506,7 +518,7 @@ function Se() {
               icon: <ExclamationCircleFilled />,
               content: '关闭后台运行进程',
               onOk() {
-                request('/api/npmProjects/shutdown', 'PUT');
+                jsonFetcher('/api/npmProjects/shutdown', 'PUT');
               },
             });
           }}
@@ -547,12 +559,13 @@ function Se() {
                     title="删除项目"
                     description="是否要删除项目"
                     onConfirm={() => {
-                      request(`/api/npmProjects/${record.id}`, 'DELETE').then(
-                        () => {
-                          message.success('删除成功');
-                          refetchNpmProjects();
-                        },
-                      );
+                      jsonFetcher(
+                        `/api/npmProjects/${record.id}`,
+                        'DELETE',
+                      ).then(() => {
+                        message.success('删除成功');
+                        refetchNpmProjects();
+                      });
                     }}
                   >
                     <Button type="link">删除</Button>
@@ -591,7 +604,7 @@ function Se() {
           npmProjectForm.validateFields().then((values: { path: string }) => {
             npmProjectForm.resetFields();
             if (currentProject) {
-              request('/api/npmProjects', 'PUT', {
+              jsonFetcher('/api/npmProjects', 'PUT', {
                 path: values.path,
                 id: currentProject.id,
               }).then(() => {
@@ -601,7 +614,7 @@ function Se() {
               });
               return;
             }
-            request('/api/npmProjects', 'POST', values).then(() => {
+            jsonFetcher('/api/npmProjects', 'POST', values).then(() => {
               refetchNpmProjects();
               setOpenCreateNpmProjectModal(false);
               message.success('创建项目成功');
@@ -649,11 +662,13 @@ function Se() {
               return nodeServer;
             });
           const nodeServers = extract(nodeServerStates);
-          request('/api/nodeServers/batch', 'POST', nodeServers).then(() => {
-            message.success('保存服务成功');
-            refetchNpmProjects();
-            setOpenCreateNodeServer(false);
-          });
+          jsonFetcher('/api/nodeServers/batch', 'POST', nodeServers).then(
+            () => {
+              message.success('保存服务成功');
+              refetchNpmProjects();
+              setOpenCreateNodeServer(false);
+            },
+          );
         }}
         width="80vw"
       >
@@ -674,16 +689,21 @@ function Se() {
               align-items: center;
             `}
           >
-            {renderStatus(
-              currentNodeServer,
-              currentNodeServer
-                ? nodeIdMapNodeServerResponse[currentNodeServer]?.name
-                : '',
-            )}
+            <Status
+              nodeServerInfo={nodeServerInfo}
+              nodeServerId={currentNodeServer}
+              nodeServerName={
+                currentNodeServer
+                  ? nodeIdMapNodeServerResponse[currentNodeServer]?.name
+                  : ''
+              }
+              errorAnchorIds={errorAnchorIds}
+            />
+
             <Button
               type="link"
               onClick={() =>
-                request(
+                jsonFetcher(
                   `/api/nodeServers/clearLog/${currentNodeServer}`,
                   'GET',
                 ).then(() => refetchLog())
@@ -702,10 +722,16 @@ function Se() {
         }}
         centered
       >
-        <LogText rawLogs={log} />
+        <div
+          className={css`
+            white-space: pre-line;
+          `}
+        >
+          {html}
+        </div>
       </Modal>
     </div>
   );
 }
 
-export default Se;
+export default NodeServerManagement;

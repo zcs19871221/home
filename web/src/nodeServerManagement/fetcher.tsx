@@ -1,8 +1,9 @@
+/* eslint-disable no-control-regex */
 import { message } from 'antd';
 
 export const base = 'http://localhost:9981';
 
-const request = async (
+export const jsonFetcher = async (
   url: string,
   method: 'POST' | 'PUT' | 'DELETE' | 'GET',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,4 +32,19 @@ const request = async (
   }
 };
 
-export default request;
+export const bufferFetcher = (url: string) =>
+  fetch(url, {
+    method: 'GET',
+  })
+    .then((response) => response.text())
+    .then((res) =>
+      res
+        .replace(/\[1m/g, '')
+        .replace(/\\x1B/g, '')
+        .replace(/\[22m/g, '')
+        .replace(/\[32m/g, '')
+        .replace(/\[33m/g, '')
+        .replace(/\[39m/g, '')
+        .replace(//g, '')
+        .replace(/(\x00)+/g, '\n'),
+    );

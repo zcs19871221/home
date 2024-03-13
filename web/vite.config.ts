@@ -8,13 +8,9 @@ export default defineConfig({
   build: {
     target: ['es2020', 'edge88', 'chrome87'],
     outDir: '../src/main/resources/templates',
-    // rollupOptions: {
-    //   output: {
-    //     manualChunks: {
-    //       vendor: ['antd', 'react', 'react-dom', 'swr', '@linaria/core'],
-    //     },
-    //   },
-    // },
+  },
+  server: {
+    port: 5173,
   },
   plugins: [
     splitVendorChunkPlugin(),

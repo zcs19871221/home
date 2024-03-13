@@ -39,6 +39,7 @@ export type NodeServerState = {
   postServers: NodeServerState[];
   prevServer?: NodeServerState;
   tmpId?: string;
+  visible?: boolean;
 };
 
 export interface NodeServerPayload extends CommonNodeServer {

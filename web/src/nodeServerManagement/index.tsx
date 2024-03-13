@@ -128,53 +128,59 @@ function NodeServerManagement() {
     [],
   );
 
-  const { nodeIdMapNodeServerResponse, rootNodeServerResponses } =
-    useMemo(() => {
-      const nodeIdMapNodeServerState: Record<number, NodeServerState> = {};
-      const idMapNodeServerResponse: Record<number, NodeServerResponse> = {};
-      const rootNodeServerStates: NodeServerState[] = [];
-      const rootResponses: NodeServerResponse[] = [];
+  const {
+    nodeIdMapNodeServerResponse,
+    rootNodeServerResponses,
+    rootNodeServerStates,
+    nodeIdMapNodeServerState,
+  } = useMemo(() => {
+    const nIdMapNodeServerState: Record<number, NodeServerState> = {};
+    const idMapNodeServerResponse: Record<number, NodeServerResponse> = {};
+    const rNodeServerStates: NodeServerState[] = [];
+    const rootResponses: NodeServerResponse[] = [];
 
-      npmProjects?.forEach((npmProject) => {
-        npmProject.nodeServers.forEach((nodeResponse) => {
-          const nodeServerResponse = { ...nodeResponse };
-          nodeServerResponse.portConfigFileRelativePath = decodeURIComponent(
-            nodeServerResponse.portConfigFileRelativePath,
-          );
-          nodeServerResponse.portReg = decodeURIComponent(
-            nodeServerResponse.portReg,
-          );
-          const nodeServerState: NodeServerState = {
-            ...nodeServerResponse,
-            postServers: [],
-          };
-          nodeIdMapNodeServerState[nodeServerResponse.id] = nodeServerState;
-          idMapNodeServerResponse[nodeServerResponse.id] = nodeServerResponse;
-          if (!nodeServerResponse.prevServerId) {
-            rootResponses.push(nodeServerResponse);
-            rootNodeServerStates.push(nodeServerState);
-          }
-        });
+    npmProjects?.forEach((npmProject) => {
+      npmProject.nodeServers.forEach((nodeResponse) => {
+        const nodeServerResponse = { ...nodeResponse };
+        nodeServerResponse.portConfigFileRelativePath = decodeURIComponent(
+          nodeServerResponse.portConfigFileRelativePath,
+        );
+        nodeServerResponse.portReg = decodeURIComponent(
+          nodeServerResponse.portReg,
+        );
+        const nodeServerState: NodeServerState = {
+          ...nodeServerResponse,
+          postServers: [],
+        };
+        nIdMapNodeServerState[nodeServerResponse.id] = nodeServerState;
+        idMapNodeServerResponse[nodeServerResponse.id] = nodeServerResponse;
+        if (!nodeServerResponse.prevServerId) {
+          rootResponses.push(nodeServerResponse);
+          rNodeServerStates.push(nodeServerState);
+        }
       });
+    });
 
-      Object.values(nodeIdMapNodeServerState).forEach((nodeState) => {
-        const nodeServerState = nodeState;
-        nodeServerState.prevServer = nodeServerState.prevServerId
-          ? nodeIdMapNodeServerState[nodeServerState.prevServerId]
-          : undefined;
-        nodeServerState.postServers =
-          nodeServerState.postServerIds?.map(
-            (postServerId) => nodeIdMapNodeServerState[postServerId],
-          ) ?? [];
-      });
+    Object.values(nIdMapNodeServerState).forEach((nodeState) => {
+      const nodeServerState = nodeState;
+      nodeServerState.prevServer = nodeServerState.prevServerId
+        ? nIdMapNodeServerState[nodeServerState.prevServerId]
+        : undefined;
+      nodeServerState.postServers =
+        nodeServerState.postServerIds?.map(
+          (postServerId) => nIdMapNodeServerState[postServerId],
+        ) ?? [];
+    });
 
-      setNodeServerStates(rootNodeServerStates);
+    // setNodeServerStates(rNodeServerStates);
 
-      return {
-        rootNodeServerResponses: rootResponses,
-        nodeIdMapNodeServerResponse: idMapNodeServerResponse,
-      };
-    }, [npmProjects]);
+    return {
+      rootNodeServerResponses: rootResponses,
+      rootNodeServerStates: rNodeServerStates,
+      nodeIdMapNodeServerResponse: idMapNodeServerResponse,
+      nodeIdMapNodeServerState: nIdMapNodeServerState,
+    };
+  }, [npmProjects]);
 
   const [currentNodeServer, setCurrentNodeServer] = useState<number | null>(
     null,
@@ -210,6 +216,10 @@ function NodeServerManagement() {
   useEffect(() => {
     refetchServerInfo();
   }, [refetchServerInfo]);
+
+  const [modifyNodeServerType, setModifyNodeServerType] = useState<
+    '批量添加修改' | '添加服务' | '编辑' | null
+  >(null);
 
   const nodeServerColumn = [
     {
@@ -309,6 +319,20 @@ function NodeServerManagement() {
         return (
           <Space>
             {groupByNpmProject && (
+              <Button
+                type="primary"
+                onClick={() => {
+                  setNodeServerStates([
+                    { ...nodeIdMapNodeServerState[record.id] },
+                  ]);
+                  setModifyNodeServerType('编辑');
+                }}
+              >
+                编辑
+              </Button>
+            )}
+
+            {groupByNpmProject && (
               <Popconfirm
                 title="删除服务"
                 description="是否要删除服务"
@@ -401,17 +425,16 @@ function NodeServerManagement() {
       ...nodeIdMapNodeServerResponse[id],
       key: id,
     }));
+
     return (
       <Table
         pagination={false}
         dataSource={handledNodeServers}
         columns={nodeServerColumn}
-        {...(postServerIds.length > 0 && {
-          expandable: {
-            expandedRowRender: Nested,
-            defaultExpandedRowKeys: postServerIds,
-          },
-        })}
+        expandable={{
+          expandedRowRender: Nested,
+          defaultExpandedRowKeys: postServerIds,
+        }}
       />
     );
   }
@@ -423,8 +446,6 @@ function NodeServerManagement() {
     { id: number; path: string } | undefined
   >();
   const [npmProjectForm] = Form.useForm();
-
-  const [openCreateNodeServer, setOpenCreateNodeServer] = useState(false);
 
   const [html, errorAnchorIds] = useMemo(() => {
     const ids: string[] = [];
@@ -478,45 +499,56 @@ function NodeServerManagement() {
 
   return (
     <div>
-      <Space
+      <div
         className={css`
-          margin: 10px 5px;
+          display: flex;
+          align-items: center;
         `}
       >
-        <Segmented
-          options={['项目分组', '服务分组']}
-          defaultValue={groupByNpmProject ? '项目分组' : '服务分组'}
-          onChange={(value) => {
-            if (value === '项目分组') {
-              setGroupByNpmProject(true);
-            } else {
-              setGroupByNpmProject(false);
-            }
-          }}
-        />
-        {groupByNpmProject && (
-          <>
-            <Button
-              onClick={() => {
-                setOpenCreateNpmProjectModal(true);
-                npmProjectForm.resetFields();
-              }}
-              type="primary"
-            >
-              添加项目
-            </Button>
+        <Space
+          className={css`
+            margin: 10px 5px;
+          `}
+        >
+          <Segmented
+            options={['项目分组', '服务分组']}
+            defaultValue={groupByNpmProject ? '项目分组' : '服务分组'}
+            onChange={(value) => {
+              if (value === '项目分组') {
+                setGroupByNpmProject(true);
+              } else {
+                setGroupByNpmProject(false);
+              }
+            }}
+          />
+          {groupByNpmProject && (
+            <>
+              <Button
+                onClick={() => {
+                  setOpenCreateNpmProjectModal(true);
+                  npmProjectForm.resetFields();
+                }}
+                type="primary"
+              >
+                添加项目
+              </Button>
 
-            <Button
-              onClick={() => {
-                setOpenCreateNodeServer(true);
-              }}
-              type="primary"
-            >
-              整体编辑服务
-            </Button>
-          </>
-        )}
+              <Button
+                onClick={() => {
+                  setNodeServerStates(rootNodeServerStates);
+                  setModifyNodeServerType('批量添加修改');
+                }}
+                type="primary"
+              >
+                整体编辑
+              </Button>
+            </>
+          )}
+        </Space>
         <Button
+          className={css`
+            margin-left: auto;
+          `}
           onClick={() => {
             Modal.confirm({
               title: '是否关闭控制台？',
@@ -531,7 +563,7 @@ function NodeServerManagement() {
         >
           关闭控制台
         </Button>
-      </Space>
+      </div>
       {!groupByNpmProject && rootNodeServerResponses.length > 0 && (
         <Table
           pagination={false}
@@ -539,7 +571,9 @@ function NodeServerManagement() {
           columns={nodeServerColumn}
           expandable={{
             expandedRowRender: Nested,
-            defaultExpandedRowKeys: rootNodeServerResponses.map((c) => c.id),
+            defaultExpandedRowKeys: rootNodeServerResponses
+              .filter((f) => nodeServerInfo && nodeServerInfo[f.id] != null)
+              .map((c) => c.id),
           }}
         />
       )}
@@ -549,7 +583,6 @@ function NodeServerManagement() {
           dataSource={npmProjects.map((p) => ({ ...p, key: p.id }))}
           expandable={{
             expandedRowRender,
-            defaultExpandedRowKeys: npmProjects?.map((p) => p.id),
           }}
           columns={[
             {
@@ -560,6 +593,30 @@ function NodeServerManagement() {
               title: '操作',
               render: (_, record) => (
                 <Space>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setCurrentProject(record);
+                      setOpenCreateNpmProjectModal(true);
+                      npmProjectForm.setFieldValue('path', record.path);
+                    }}
+                  >
+                    编辑
+                  </Button>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setNodeServerStates([
+                        {
+                          postServers: [],
+                          npmProjectId: record.id,
+                        },
+                      ]);
+                      setModifyNodeServerType('添加服务');
+                    }}
+                  >
+                    添加服务
+                  </Button>
                   <Popconfirm
                     title="删除项目"
                     description="是否要删除项目"
@@ -575,26 +632,6 @@ function NodeServerManagement() {
                   >
                     <Button type="link">删除</Button>
                   </Popconfirm>
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setCurrentProject(record);
-                      setOpenCreateNpmProjectModal(true);
-                      npmProjectForm.setFieldValue('path', record.path);
-                    }}
-                  >
-                    编辑
-                  </Button>
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setCurrentProject(record);
-                      setOpenCreateNpmProjectModal(true);
-                      npmProjectForm.setFieldValue('path', record.path);
-                    }}
-                  >
-                    添加服务
-                  </Button>
                 </Space>
               ),
             },
@@ -644,14 +681,17 @@ function NodeServerManagement() {
       </Modal>
 
       <Modal
-        title="编辑或添加服务"
-        open={openCreateNodeServer}
+        title={modifyNodeServerType}
+        open={modifyNodeServerType !== null}
         onCancel={() => {
-          setOpenCreateNodeServer(false);
+          setModifyNodeServerType(null);
         }}
         okText="保存"
         cancelText="取消"
         onOk={() => {
+          if (modifyNodeServerType === null) {
+            return;
+          }
           const extract = (state: NodeServerState[]): NodeServerPayload[] =>
             state.map((nodeServerState): NodeServerPayload => {
               const nodeServer: NodeServerPayload = {
@@ -667,13 +707,23 @@ function NodeServerManagement() {
               return nodeServer;
             });
           const nodeServers = extract(nodeServerStates);
-          jsonFetcher('/api/nodeServers/batch', 'POST', nodeServers).then(
-            () => {
-              message.success('保存服务成功');
-              refetchNpmProjects();
-              setOpenCreateNodeServer(false);
-            },
-          );
+
+          if (modifyNodeServerType === '批量添加修改') {
+            jsonFetcher('/api/nodeServers/batch', 'POST', nodeServers).then(
+              () => {
+                message.success('保存服务成功');
+                refetchNpmProjects();
+                setModifyNodeServerType(null);
+              },
+            );
+            return;
+          }
+
+          jsonFetcher('/api/nodeServers', 'POST', nodeServers[0]).then(() => {
+            message.success('保存服务成功');
+            refetchNpmProjects();
+            setModifyNodeServerType(null);
+          });
         }}
         width="80vw"
       >
@@ -681,6 +731,8 @@ function NodeServerManagement() {
           nodeServerStates={nodeServerStates}
           rootNodeServerStates={nodeServerStates}
           updateRootNodeServerStates={setNodeServerStates}
+          hideAddButtons={modifyNodeServerType !== '批量添加修改'}
+          nodeIdMapNodeServerState={nodeIdMapNodeServerState}
         />
       </Modal>
       <Modal

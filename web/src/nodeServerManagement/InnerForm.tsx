@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-param-reassign */
 import { css } from '@linaria/core';
-import { Button, Card, Form, Input, Select, Space } from 'antd';
+import { Button, Card, Form, Input, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { NodeServerState } from './types.ts';
 import useNpmProjects from './useNpmProjects.ts';
@@ -10,11 +10,13 @@ import nodeServerTemplates from './nodeServerTemplates.ts';
 interface CommonProps {
   rootNodeServerStates: NodeServerState[];
   updateRootNodeServerStates: (states: NodeServerState[]) => void;
+  nodeIdMapNodeServerState: Record<number, NodeServerState>;
 }
 export function MyForm({
   rootNodeServerStates,
   updateRootNodeServerStates,
   nodeServerState,
+  nodeIdMapNodeServerState,
 }: CommonProps & { nodeServerState: NodeServerState }) {
   const [npmProjectId, setNpmProjectId] = useState<undefined | number>();
 
@@ -127,6 +129,7 @@ export function MyForm({
             prevNodeServerState={nodeServerState}
             rootNodeServerStates={rootNodeServerStates}
             updateRootNodeServerStates={updateRootNodeServerStates}
+            nodeIdMapNodeServerState={nodeIdMapNodeServerState}
           />
         </div>
       </Form.Item>
@@ -140,11 +143,15 @@ export function InnerForm({
   updateRootNodeServerStates,
   nodeServerStates,
   prevNodeServerState,
+  hideAddButtons = false,
+  nodeIdMapNodeServerState,
 }: {
   nodeServerStates: NodeServerState[];
   prevNodeServerState?: NodeServerState;
   rootNodeServerStates: NodeServerState[];
+  hideAddButtons?: boolean;
   updateRootNodeServerStates: (states: NodeServerState[]) => void;
+  nodeIdMapNodeServerState: Record<number, NodeServerState>;
 }) {
   const updateBottom2Top = () => {
     let states = [...nodeServerStates];
@@ -178,6 +185,7 @@ export function InnerForm({
             nodeServerState={postServerState}
             updateRootNodeServerStates={updateRootNodeServerStates}
             rootNodeServerStates={rootNodeServerStates}
+            nodeIdMapNodeServerState={nodeIdMapNodeServerState}
           />
           <Button
             onClick={() => {
@@ -189,28 +197,65 @@ export function InnerForm({
           </Button>
         </Card>
       ))}
-      <Space
-        className={css`
-          margin-top: 10px;
-        `}
-      >
-        {nodeServerTemplates.map((template) => (
-          <Button
-            type="primary"
-            onClick={() => {
-              nodeServerStates.push({
-                ...template.value,
-                tmpId: `tmp${id++}`,
-                prevServer: prevNodeServerState,
-              });
+      {!hideAddButtons && (
+        <div
+          className={css`
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+          `}
+        >
+          {nodeServerTemplates.map((template) => (
+            <Button
+              type="primary"
+              onClick={() => {
+                nodeServerStates.push({
+                  ...template.value,
+                  tmpId: `tmp${id++}`,
+                  prevServer: prevNodeServerState,
+                });
 
-              updateBottom2Top();
-            }}
+                updateBottom2Top();
+              }}
+            >
+              {template.name}模板
+            </Button>
+          ))}
+          <div
+            className={css`
+              width: 150px;
+              flex: 0 0 auto;
+            `}
           >
-            {template.name}模板
-          </Button>
-        ))}
-      </Space>
+            <Select
+              className={css`
+                width: 100%;
+              `}
+              onChange={(selectedId: number) => {
+                nodeServerStates.push({
+                  ...nodeIdMapNodeServerState[selectedId],
+                  tmpId: `tmp${selectedId++}`,
+                  prevServer: prevNodeServerState,
+                });
+
+                updateBottom2Top();
+              }}
+            >
+              {Object.values(nodeIdMapNodeServerState).map(
+                (nodeServerState) => (
+                  <Select.Option
+                    value={nodeServerState.id}
+                    key={nodeServerState.id}
+                  >
+                    {nodeServerState.name}
+                  </Select.Option>
+                ),
+              )}
+            </Select>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

@@ -26,6 +26,8 @@ public class NodeServerCreatedOrUpdated {
     //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
     private String portReg;
 
+    private int id;
+
 //    @JsonSetter
 //    public void setPortReg(String portReg) {
 //        this.portReg = Pattern.compile(URLDecoder.decode(portReg,

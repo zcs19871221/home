@@ -76,7 +76,6 @@ public class NodeServersServiceImpl implements NodeServersService {
                 npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
         NodeServer nodeServer =
                 nodeServerMapper.map(nodeServerCreatedOrUpdated);
-
         npmProject.addNodeServer(nodeServer);
 
         String projectErrorMsg =
@@ -185,8 +184,11 @@ public class NodeServersServiceImpl implements NodeServersService {
     public NodeServerResponse createOrUpdate(NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated) throws Exception {
         NodeServer nodeServer =
                 checkAndFill(nodeServerCreatedOrUpdated);
-        nodeServerRepository.save(nodeServer);
-        return map(nodeServer);
+        if (nodeServer.getPostServers() == null) {
+            nodeServer.setPostServers(new HashSet<>());
+        }
+
+        return map(nodeServerRepository.save(nodeServer));
     }
 
     @Override

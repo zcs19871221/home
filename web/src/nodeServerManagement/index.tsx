@@ -140,6 +140,7 @@ function NodeServerManagement() {
     const rootResponses: NodeServerResponse[] = [];
 
     npmProjects?.forEach((npmProject) => {
+      npmProject.nodeServers.sort((a, b) => a.id - b.id);
       npmProject.nodeServers.forEach((nodeResponse) => {
         const nodeServerResponse = { ...nodeResponse };
         nodeServerResponse.portConfigFileRelativePath = decodeURIComponent(

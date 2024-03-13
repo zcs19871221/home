@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -36,10 +34,7 @@ public class NodeServersServiceImpl implements NodeServersService {
 
     private final NpmProjectsRepository npmProjectsRepository;
 
-
-    @PersistenceContext
-    EntityManager entityManager;
-    private Boolean shutDownhook = false;
+    private Boolean shutdownHook = false;
 
     private PortPath checkPath(NodeServer nodeServer) throws IOException {
         Path path = Paths.get(nodeServer.getNpmProject().getPath(),
@@ -76,6 +71,12 @@ public class NodeServersServiceImpl implements NodeServersService {
                 npmProjectsRepository.getReferenceById(nodeServerCreatedOrUpdated.getNpmProjectId());
         NodeServer nodeServer =
                 nodeServerMapper.map(nodeServerCreatedOrUpdated);
+        if (nodeServer.getId() != null) {
+            NodeServer entityServer =
+                    nodeServerRepository.getReferenceById(nodeServer.getId());
+            nodeServerMapper.merge(nodeServer, entityServer);
+            nodeServer = entityServer;
+        }
         npmProject.addNodeServer(nodeServer);
 
         String projectErrorMsg =
@@ -140,11 +141,6 @@ public class NodeServersServiceImpl implements NodeServersService {
     @Transactional
     public List<NodeServerResponse> createOrUpdateList(List<NodeServerCreatedOrUpdated> nodeServerCreatedOrUpdatedList) throws Exception {
 
-        nodeServerRepository.deleteAll();
-        for (Integer nodeServerId : idMapServerProcess.keySet()) {
-            stopServer(nodeServerId);
-        }
-        entityManager.flush();
         List<NodeServerResponse> nodeServerResponses = new ArrayList<>();
         for (NodeServerCreatedOrUpdated nodeServerCreatedOrUpdated : nodeServerCreatedOrUpdatedList) {
             nodeServerResponses.add(createOrUpdate(nodeServerCreatedOrUpdated));
@@ -228,7 +224,7 @@ public class NodeServersServiceImpl implements NodeServersService {
         idMapServerProcess.put(nodeServerId, processInfo);
 
 
-        if (!shutDownhook) {
+        if (!shutdownHook) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 for (Integer i : idMapServerProcess.keySet()) {
                     try {
@@ -239,7 +235,7 @@ public class NodeServersServiceImpl implements NodeServersService {
                 }
                 System.exit(0);
             }));
-            shutDownhook = true;
+            shutdownHook = true;
         }
 
         if (processInfo.getPrevServerId() != null) {

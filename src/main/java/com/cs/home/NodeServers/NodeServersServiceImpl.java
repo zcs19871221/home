@@ -76,6 +76,12 @@ public class NodeServersServiceImpl implements NodeServersService {
                     nodeServerRepository.getReferenceById(nodeServer.getId());
             nodeServerMapper.merge(nodeServer, entityServer);
             nodeServer = entityServer;
+            if (nodeServer.getPostServers() == null) {
+                nodeServer.setPostServers(new HashSet<>());
+            }
+            for (NodeServer postServer : nodeServer.getPostServers()) {
+                nodeServer.removePostServer(postServer);
+            }
         }
         npmProject.addNodeServer(nodeServer);
 

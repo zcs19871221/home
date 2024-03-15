@@ -20,6 +20,7 @@ public interface NodeServerMapper {
 
     Map<Integer, NodeServerRunningInfo> map(Map<Integer, ProcessInfo> nodeServer);
 
+    @Mapping(target = "postServers", source = "postServers", ignore = true)
     void merge(NodeServer source, @MappingTarget NodeServer target);
 
     default String map(Pattern portReg) {

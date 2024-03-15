@@ -2,9 +2,9 @@ import { NodeServerState } from './types.ts';
 
 const nodeServerTemplates: { name: string; value: NodeServerState }[] = [
   {
-    name: 'UiServer',
+    name: '微前端UI主服务',
     value: {
-      name: 'UI-Server',
+      name: '微前端UI主服务',
       portConfigFileRelativePath: '.env',
       portReg: 'RENDER_SERVER_PORT\\s*=\\s*(\\d+)',
       command: 'npm run devserver',
@@ -12,9 +12,9 @@ const nodeServerTemplates: { name: string; value: NodeServerState }[] = [
     },
   },
   {
-    name: 'BffServer',
+    name: '微前端BFF主服务',
     value: {
-      name: 'BFF-Server',
+      name: '微前端BFF主服务',
       portConfigFileRelativePath: '.env',
       portReg: 'BFF_SERVER_PORT\\s*=\\s*(\\d+)',
       command: 'npm run devserver',
@@ -22,10 +22,10 @@ const nodeServerTemplates: { name: string; value: NodeServerState }[] = [
     },
   },
   {
-    name: 'BuildServer',
+    name: '微前端Build服务',
     value: {
       portConfigFileRelativePath: 'project.js',
-      portReg: 'port:\\s*(\\d+)',
+      portReg: 'port:[\'"]*\\s*(\\d+)',
       command: 'npm run build',
       postServers: [],
     },

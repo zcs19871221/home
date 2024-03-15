@@ -23,16 +23,10 @@ public class NodeServerCreatedOrUpdated {
     @NotEmpty
     private String portConfigFileRelativePath;
 
-    //    @JsonDeserialize(using = CustomRegExpDeserializer.class)
+
     private String portReg;
 
-    private int id;
-
-//    @JsonSetter
-//    public void setPortReg(String portReg) {
-//        this.portReg = Pattern.compile(URLDecoder.decode(portReg,
-//                StandardCharsets.UTF_8));
-//    }
+    private Integer id;
 
 
 }

@@ -543,6 +543,15 @@ function NodeServerManagement() {
               >
                 整体编辑
               </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setNodeServerStates([]);
+                  setModifyNodeServerType('添加服务');
+                }}
+              >
+                添加服务
+              </Button>
             </>
           )}
         </Space>
@@ -604,20 +613,7 @@ function NodeServerManagement() {
                   >
                     编辑
                   </Button>
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setNodeServerStates([
-                        {
-                          postServers: [],
-                          npmProjectId: record.id,
-                        },
-                      ]);
-                      setModifyNodeServerType('添加服务');
-                    }}
-                  >
-                    添加服务
-                  </Button>
+
                   <Popconfirm
                     title="删除项目"
                     description="是否要删除项目"
@@ -720,10 +716,12 @@ function NodeServerManagement() {
             return;
           }
 
-          jsonFetcher('/api/nodeServers', 'POST', nodeServers[0]).then(() => {
-            message.success('保存服务成功');
-            refetchNpmProjects();
-            setModifyNodeServerType(null);
+          nodeServers.forEach((nodeServer) => {
+            jsonFetcher('/api/nodeServers', 'POST', nodeServer).then(() => {
+              message.success('保存服务成功');
+              refetchNpmProjects();
+              setModifyNodeServerType(null);
+            });
           });
         }}
         width="80vw"
@@ -732,7 +730,7 @@ function NodeServerManagement() {
           nodeServerStates={nodeServerStates}
           rootNodeServerStates={nodeServerStates}
           updateRootNodeServerStates={setNodeServerStates}
-          hideAddButtons={modifyNodeServerType !== '批量添加修改'}
+          hideAddButtons={modifyNodeServerType === '编辑'}
           nodeIdMapNodeServerState={nodeIdMapNodeServerState}
         />
       </Modal>

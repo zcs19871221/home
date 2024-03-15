@@ -25,7 +25,7 @@ const nodeServerTemplates: { name: string; value: NodeServerState }[] = [
     name: '微前端Build服务',
     value: {
       portConfigFileRelativePath: 'project.js',
-      portReg: 'port:[\'"]*\\s*(\\d+)',
+      portReg: 'port[\'"]*:\\s*(\\d+)',
       command: 'npm run build',
       postServers: [],
     },

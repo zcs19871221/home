@@ -1,3 +1,4 @@
+import { useIntl, FormattedMessage } from 'react-intl';
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-param-reassign */
 import { css } from '@linaria/core';
@@ -18,6 +19,8 @@ export function MyForm({
   nodeServerState,
   nodeIdMapNodeServerState,
 }: CommonProps & { nodeServerState: NodeServerState }) {
+  const intl = useIntl();
+
   const [npmProjectId, setNpmProjectId] = useState<undefined | number>();
 
   const { data: npmProjects } = useNpmProjects();
@@ -36,11 +39,17 @@ export function MyForm({
     >
       <Form.Item
         name="name"
-        label="名称"
+        label={intl.formatMessage({
+          id: 'key0001',
+          defaultMessage: '名称',
+        })}
         rules={[
           {
             required: true,
-            message: '输入服务名称',
+            message: intl.formatMessage({
+              id: 'key0002',
+              defaultMessage: '输入服务名称',
+            }),
           },
         ]}
       >
@@ -48,15 +57,24 @@ export function MyForm({
       </Form.Item>
       <Form.Item
         name="command"
-        label="npm 命令"
+        label={intl.formatMessage({
+          id: 'key0003',
+          defaultMessage: 'npm 命令',
+        })}
         rules={[
           {
             required: true,
-            message: '输入npm启动命令',
+            message: intl.formatMessage({
+              id: 'key0004',
+              defaultMessage: '输入npm启动命令',
+            }),
           },
           {
             pattern: /^npm /,
-            message: '以npm 开头',
+            message: intl.formatMessage({
+              id: 'key0005',
+              defaultMessage: '以npm 开头',
+            }),
           },
         ]}
       >
@@ -64,11 +82,17 @@ export function MyForm({
       </Form.Item>
       <Form.Item
         name="npmProjectId"
-        label="所属项目"
+        label={intl.formatMessage({
+          id: 'key0006',
+          defaultMessage: '所属项目',
+        })}
         rules={[
           {
             required: true,
-            message: '输入npm启动命令',
+            message: intl.formatMessage({
+              id: 'key0004',
+              defaultMessage: '输入npm启动命令',
+            }),
           },
         ]}
       >
@@ -83,11 +107,17 @@ export function MyForm({
 
       <Form.Item
         name="portConfigFileRelativePath"
-        label="port配置文件相对地址"
+        label={intl.formatMessage({
+          id: 'key0007',
+          defaultMessage: 'port配置文件相对地址',
+        })}
         rules={[
           {
             required: true,
-            message: '输入port配置文件相对地址',
+            message: intl.formatMessage({
+              id: 'key0008',
+              defaultMessage: '输入port配置文件相对地址',
+            }),
           },
         ]}
       >
@@ -95,11 +125,17 @@ export function MyForm({
       </Form.Item>
       <Form.Item
         name="portReg"
-        label="port配置文件正则"
+        label={intl.formatMessage({
+          id: 'key0009',
+          defaultMessage: 'port配置文件正则',
+        })}
         rules={[
           {
             required: true,
-            message: '输入正则',
+            message: intl.formatMessage({
+              id: 'key0010',
+              defaultMessage: '输入正则',
+            }),
           },
           {
             validator: (_, value) => {
@@ -114,9 +150,19 @@ export function MyForm({
           },
         ]}
       >
-        <Input placeholder="输入正则，必须包含括号以获取端口" />
+        <Input
+          placeholder={intl.formatMessage({
+            id: 'key0011',
+            defaultMessage: '输入正则，必须包含括号以获取端口',
+          })}
+        />
       </Form.Item>
-      <Form.Item label="子服务">
+      <Form.Item
+        label={intl.formatMessage({
+          id: 'key0012',
+          defaultMessage: '子服务',
+        })}
+      >
         <div
           style={{
             display: 'flex',
@@ -193,7 +239,7 @@ export function InnerForm({
               updateBottom2Top();
             }}
           >
-            删除服务
+            <FormattedMessage id="key0013" defaultMessage="删除服务" />
           </Button>
         </Card>
       ))}
@@ -219,7 +265,11 @@ export function InnerForm({
                 updateBottom2Top();
               }}
             >
-              {template.name}模板
+              <FormattedMessage
+                id="key0014"
+                defaultMessage="{v1}模板"
+                values={{ v1: template.name }}
+              />
             </Button>
           ))}
           <div
@@ -250,7 +300,7 @@ export function InnerForm({
                   >
                     {nodeServerState.name}
                   </Select.Option>
-                ),
+                )
               )}
             </Select>
           </div>

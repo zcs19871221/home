@@ -1,3 +1,4 @@
+import { useIntl, FormattedMessage } from 'react-intl';
 /* eslint-disable no-control-regex */
 import { css } from '@linaria/core';
 import { ExclamationCircleFilled } from '@ant-design/icons';
@@ -49,6 +50,8 @@ const Status = ({
   nodeServerName?: string;
   errorAnchorIds?: string[];
 }) => {
+  const intl = useIntl();
+
   let text = '';
   let color: TagProps['color'] = 'processing';
 
@@ -60,30 +63,48 @@ const Status = ({
     nodeServerId === null ||
     nodeServerInfo[nodeServerId]?.status === undefined
   ) {
-    text = '未开启';
+    text = intl.formatMessage({
+      id: 'key0015',
+      defaultMessage: '未开启',
+    });
     color = 'grey';
   } else {
     const status = nodeServerInfo[nodeServerId]?.status;
 
     switch (status) {
       case NodeServerStatus.CLOSED:
-        text = '已关闭';
+        text = intl.formatMessage({
+          id: 'key0016',
+          defaultMessage: '已关闭',
+        });
         color = 'grey';
         break;
       case NodeServerStatus.ERROR:
-        text = '错误';
+        text = intl.formatMessage({
+          id: 'key0017',
+          defaultMessage: '错误',
+        });
         color = 'error';
         break;
       case NodeServerStatus.COMPILING:
-        text = '编译中..';
+        text = intl.formatMessage({
+          id: 'key0018',
+          defaultMessage: '编译中..',
+        });
         color = 'processing';
         break;
       case NodeServerStatus.SUCCESS:
-        text = '成功';
+        text = intl.formatMessage({
+          id: 'key0019',
+          defaultMessage: '成功',
+        });
         color = 'success';
         break;
       case NodeServerStatus.UNKNOWN:
-        text = '未知';
+        text = intl.formatMessage({
+          id: 'key0020',
+          defaultMessage: '未知',
+        });
         color = 'warning';
         break;
       default: {
@@ -110,7 +131,9 @@ const Status = ({
           if (!errorAnchorIds) {
             return;
           }
-          window.location.href = `#${errorAnchorIds?.[errorAnchorIndexRef.current]}`;
+          window.location.href = `#${
+            errorAnchorIds?.[errorAnchorIndexRef.current]
+          }`;
           errorAnchorIndexRef.current =
             (errorAnchorIndexRef.current + 1) % errorAnchorIds.length;
         }}
@@ -122,10 +145,12 @@ const Status = ({
 };
 
 function NodeServerManagement() {
+  const intl = useIntl();
+
   const { data: npmProjects, mutate: refetchNpmProjects } = useNpmProjects();
 
   const [nodeServerStates, setNodeServerStates] = useState<NodeServerState[]>(
-    [],
+    []
   );
 
   const {
@@ -144,10 +169,10 @@ function NodeServerManagement() {
       npmProject.nodeServers.forEach((nodeResponse) => {
         const nodeServerResponse = { ...nodeResponse };
         nodeServerResponse.portConfigFileRelativePath = decodeURIComponent(
-          nodeServerResponse.portConfigFileRelativePath,
+          nodeServerResponse.portConfigFileRelativePath
         );
         nodeServerResponse.portReg = decodeURIComponent(
-          nodeServerResponse.portReg,
+          nodeServerResponse.portReg
         );
         const nodeServerState: NodeServerState = {
           ...nodeServerResponse,
@@ -169,7 +194,7 @@ function NodeServerManagement() {
         : undefined;
       nodeServerState.postServers =
         nodeServerState.postServerIds?.map(
-          (postServerId) => nIdMapNodeServerState[postServerId],
+          (postServerId) => nIdMapNodeServerState[postServerId]
         ) ?? [];
     });
 
@@ -184,7 +209,7 @@ function NodeServerManagement() {
   }, [npmProjects]);
 
   const [currentNodeServer, setCurrentNodeServer] = useState<number | null>(
-    null,
+    null
   );
 
   const [groupByNpmProject, setGroupByNpmProject] = useState(false);
@@ -200,12 +225,20 @@ function NodeServerManagement() {
       revalidateOnFocus: true,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
-    },
+    }
   );
 
   const operator = (type: 'start' | 'stop' | 'restart', nodeServerId: number) =>
     jsonFetcher(`/api/nodeServers/${type}/${nodeServerId}`, 'PUT').then(() => {
-      message.success(`${type}指令已发送`);
+      message.success(
+        intl.formatMessage(
+          {
+            id: 'key0021',
+            defaultMessage: '{v1}指令已发送',
+          },
+          { v1: type }
+        )
+      );
     });
 
   const { data: nodeServerInfo, mutate: refetchServerInfo } = useSWR<{
@@ -224,7 +257,10 @@ function NodeServerManagement() {
 
   const nodeServerColumn = [
     {
-      title: '名称',
+      title: intl.formatMessage({
+        id: 'key0001',
+        defaultMessage: '名称',
+      }),
       dataIndex: 'name',
       render: (_value: unknown, record: NodeServerResponse) => (
         <Space
@@ -243,14 +279,20 @@ function NodeServerManagement() {
     },
 
     {
-      title: '命令',
+      title: intl.formatMessage({
+        id: 'key0022',
+        defaultMessage: '命令',
+      }),
       dataIndex: 'command',
     },
     {
-      title: '地址',
+      title: intl.formatMessage({
+        id: 'key0023',
+        defaultMessage: '地址',
+      }),
       render: (_v: unknown, record: NodeServerResponse) => {
         const path = npmProjects?.find(
-          (n) => n.id === record.npmProjectId,
+          (n) => n.id === record.npmProjectId
         )?.path;
         if (record.errorField === 'PROJECT_PATH') {
           return (
@@ -269,7 +311,10 @@ function NodeServerManagement() {
       },
     },
     {
-      title: '端口',
+      title: intl.formatMessage({
+        id: 'key0024',
+        defaultMessage: '端口',
+      }),
       dataIndex: 'port',
       render: (port: string, record: NodeServerResponse) => {
         if (record.errorMsg) {
@@ -286,7 +331,7 @@ function NodeServerManagement() {
           );
         }
         const hasDuplicatedPort = Object.values(
-          nodeIdMapNodeServerResponse,
+          nodeIdMapNodeServerResponse
         ).find((n) => n.id !== record.id && n.port === port);
 
         return (
@@ -305,7 +350,7 @@ function NodeServerManagement() {
               }
               jsonFetcher(
                 `/api/nodeServers/changePort/${record.id}/${text}`,
-                'PUT',
+                'PUT'
               ).then(refetchNpmProjects);
             }}
           />
@@ -313,7 +358,10 @@ function NodeServerManagement() {
       },
     },
     {
-      title: '操作',
+      title: intl.formatMessage({
+        id: 'key0025',
+        defaultMessage: '操作',
+      }),
       render: (_: unknown, record: NodeServerResponse) => {
         const info = nodeServerInfo ? nodeServerInfo[record.id] : null;
 
@@ -326,27 +374,45 @@ function NodeServerManagement() {
                   setNodeServerStates([
                     { ...nodeIdMapNodeServerState[record.id] },
                   ]);
-                  setModifyNodeServerType('编辑');
+                  setModifyNodeServerType(
+                    intl.formatMessage({
+                      id: 'key0026',
+                      defaultMessage: '编辑',
+                    })
+                  );
                 }}
               >
-                编辑
+                <FormattedMessage id="key0026" defaultMessage="编辑" />
               </Button>
             )}
 
             {groupByNpmProject && (
               <Popconfirm
-                title="删除服务"
-                description="是否要删除服务"
+                title={intl.formatMessage({
+                  id: 'key0013',
+                  defaultMessage: '删除服务',
+                })}
+                description={intl.formatMessage({
+                  id: 'key0027',
+                  defaultMessage: '是否要删除服务',
+                })}
                 onConfirm={() => {
                   jsonFetcher(`/api/nodeServers/${record.id}`, 'DELETE').then(
                     () => {
-                      message.success('删除成功');
+                      message.success(
+                        intl.formatMessage({
+                          id: 'key0028',
+                          defaultMessage: '删除成功',
+                        })
+                      );
                       refetchNpmProjects();
-                    },
+                    }
                   );
                 }}
               >
-                <Button type="link">删除</Button>
+                <Button type="link">
+                  <FormattedMessage id="key0029" defaultMessage="删除" />
+                </Button>
               </Popconfirm>
             )}
             {!groupByNpmProject && (
@@ -356,7 +422,7 @@ function NodeServerManagement() {
                   onClick={() =>
                     jsonFetcher(
                       `/api/npmProjects/vscode/${record.npmProjectId}`,
-                      'GET',
+                      'GET'
                     )
                   }
                 >
@@ -366,11 +432,11 @@ function NodeServerManagement() {
                   type="link"
                   onClick={() =>
                     operator('start', record.id as number).then(() =>
-                      refetchServerInfo(),
+                      refetchServerInfo()
                     )
                   }
                 >
-                  启动
+                  <FormattedMessage id="key0030" defaultMessage="启动" />
                 </Button>
                 <Button
                   type="link"
@@ -379,21 +445,21 @@ function NodeServerManagement() {
                   }}
                   disabled={!info}
                 >
-                  日志
+                  <FormattedMessage id="key0031" defaultMessage="日志" />
                 </Button>
                 <Button
                   type="link"
                   onClick={() =>
                     operator('restart', record.id).then(() =>
-                      refetchServerInfo(),
+                      refetchServerInfo()
                     )
                   }
                 >
-                  重启
+                  <FormattedMessage id="key0032" defaultMessage="重启" />
                 </Button>
 
                 <Button type="link" onClick={() => operator('stop', record.id)}>
-                  关闭
+                  <FormattedMessage id="key0033" defaultMessage="关闭" />
                 </Button>
               </DisabledContextProvider>
             )}
@@ -465,7 +531,7 @@ function NodeServerManagement() {
           htmlParts.push(
             <h3 id={idKey} className={errorAnchorCls}>
               {errorText}
-            </h3>,
+            </h3>
           );
           return _match;
         }
@@ -480,17 +546,17 @@ function NodeServerManagement() {
                 jsonFetcher(
                   '/api/npmProjects/vscodeError',
                   'PUT',
-                  encodeURIComponent(`${locate}:${row}:${col}`),
+                  encodeURIComponent(`${locate}:${row}:${col}`)
                 );
               }}
               target="_blank"
             >
               {_match}
             </Button>
-          </h3>,
+          </h3>
         );
         return _match;
-      },
+      }
     );
     if (log) {
       htmlParts.push(log.slice(index));
@@ -512,8 +578,27 @@ function NodeServerManagement() {
           `}
         >
           <Segmented
-            options={['项目分组', '服务分组']}
-            defaultValue={groupByNpmProject ? '项目分组' : '服务分组'}
+            options={[
+              intl.formatMessage({
+                id: 'key0034',
+                defaultMessage: '项目分组',
+              }),
+              intl.formatMessage({
+                id: 'key0035',
+                defaultMessage: '服务分组',
+              }),
+            ]}
+            defaultValue={
+              groupByNpmProject
+                ? intl.formatMessage({
+                    id: 'key0034',
+                    defaultMessage: '项目分组',
+                  })
+                : intl.formatMessage({
+                    id: 'key0035',
+                    defaultMessage: '服务分组',
+                  })
+            }
             onChange={(value) => {
               if (value === '项目分组') {
                 setGroupByNpmProject(true);
@@ -531,26 +616,36 @@ function NodeServerManagement() {
                 }}
                 type="primary"
               >
-                添加项目
+                <FormattedMessage id="key0036" defaultMessage="添加项目" />
               </Button>
 
               <Button
                 onClick={() => {
                   setNodeServerStates(rootNodeServerStates);
-                  setModifyNodeServerType('批量添加修改');
+                  setModifyNodeServerType(
+                    intl.formatMessage({
+                      id: 'key0037',
+                      defaultMessage: '批量添加修改',
+                    })
+                  );
                 }}
                 type="primary"
               >
-                整体编辑
+                <FormattedMessage id="key0038" defaultMessage="整体编辑" />
               </Button>
               <Button
                 type="primary"
                 onClick={() => {
                   setNodeServerStates([]);
-                  setModifyNodeServerType('添加服务');
+                  setModifyNodeServerType(
+                    intl.formatMessage({
+                      id: 'key0039',
+                      defaultMessage: '添加服务',
+                    })
+                  );
                 }}
               >
-                添加服务
+                <FormattedMessage id="key0039" defaultMessage="添加服务" />
               </Button>
             </>
           )}
@@ -561,9 +656,15 @@ function NodeServerManagement() {
           `}
           onClick={() => {
             Modal.confirm({
-              title: '是否关闭控制台？',
+              title: intl.formatMessage({
+                id: 'key0040',
+                defaultMessage: '是否关闭控制台？',
+              }),
               icon: <ExclamationCircleFilled />,
-              content: '关闭后台运行进程',
+              content: intl.formatMessage({
+                id: 'key0041',
+                defaultMessage: '关闭后台运行进程',
+              }),
               onOk() {
                 jsonFetcher('/api/npmProjects/shutdown', 'PUT');
               },
@@ -571,7 +672,7 @@ function NodeServerManagement() {
           }}
           type="link"
         >
-          关闭控制台
+          <FormattedMessage id="key0042" defaultMessage="关闭控制台" />
         </Button>
       </div>
       {!groupByNpmProject && rootNodeServerResponses.length > 0 && (
@@ -597,10 +698,16 @@ function NodeServerManagement() {
           columns={[
             {
               dataIndex: 'path',
-              title: '路径',
+              title: intl.formatMessage({
+                id: 'key0043',
+                defaultMessage: '路径',
+              }),
             },
             {
-              title: '操作',
+              title: intl.formatMessage({
+                id: 'key0025',
+                defaultMessage: '操作',
+              }),
               render: (_, record) => (
                 <Space>
                   <Button
@@ -611,23 +718,36 @@ function NodeServerManagement() {
                       npmProjectForm.setFieldValue('path', record.path);
                     }}
                   >
-                    编辑
+                    <FormattedMessage id="key0026" defaultMessage="编辑" />
                   </Button>
 
                   <Popconfirm
-                    title="删除项目"
-                    description="是否要删除项目"
+                    title={intl.formatMessage({
+                      id: 'key0044',
+                      defaultMessage: '删除项目',
+                    })}
+                    description={intl.formatMessage({
+                      id: 'key0045',
+                      defaultMessage: '是否要删除项目',
+                    })}
                     onConfirm={() => {
                       jsonFetcher(
                         `/api/npmProjects/${record.id}`,
-                        'DELETE',
+                        'DELETE'
                       ).then(() => {
-                        message.success('删除成功');
+                        message.success(
+                          intl.formatMessage({
+                            id: 'key0028',
+                            defaultMessage: '删除成功',
+                          })
+                        );
                         refetchNpmProjects();
                       });
                     }}
                   >
-                    <Button type="link">删除</Button>
+                    <Button type="link">
+                      <FormattedMessage id="key0029" defaultMessage="删除" />
+                    </Button>
                   </Popconfirm>
                 </Space>
               ),
@@ -637,7 +757,23 @@ function NodeServerManagement() {
       ) : null}
       <Modal
         open={openCreateNpmProjectModal}
-        title={`${currentProject ? '编辑' : '添加'}项目`}
+        title={intl.formatMessage(
+          {
+            id: 'key0047',
+            defaultMessage: '{v1}项目',
+          },
+          {
+            v1: currentProject
+              ? intl.formatMessage({
+                  id: 'key0026',
+                  defaultMessage: '编辑',
+                })
+              : intl.formatMessage({
+                  id: 'key0046',
+                  defaultMessage: '添加',
+                }),
+          }
+        )}
         onCancel={() => setOpenCreateNpmProjectModal(false)}
         onOk={() => {
           npmProjectForm.validateFields().then((values: { path: string }) => {
@@ -649,14 +785,24 @@ function NodeServerManagement() {
               }).then(() => {
                 refetchNpmProjects();
                 setOpenCreateNpmProjectModal(false);
-                message.success('修改项目成功');
+                message.success(
+                  intl.formatMessage({
+                    id: 'key0048',
+                    defaultMessage: '修改项目成功',
+                  })
+                );
               });
               return;
             }
             jsonFetcher('/api/npmProjects', 'POST', values).then(() => {
               refetchNpmProjects();
               setOpenCreateNpmProjectModal(false);
-              message.success('创建项目成功');
+              message.success(
+                intl.formatMessage({
+                  id: 'key0049',
+                  defaultMessage: '创建项目成功',
+                })
+              );
             });
           });
         }}
@@ -683,8 +829,14 @@ function NodeServerManagement() {
         onCancel={() => {
           setModifyNodeServerType(null);
         }}
-        okText="保存"
-        cancelText="取消"
+        okText={intl.formatMessage({
+          id: 'key0050',
+          defaultMessage: '保存',
+        })}
+        cancelText={intl.formatMessage({
+          id: 'key0051',
+          defaultMessage: '取消',
+        })}
         onOk={() => {
           if (modifyNodeServerType === null) {
             return;
@@ -696,7 +848,7 @@ function NodeServerManagement() {
               };
               nodeServer.postServers ??= [];
               nodeServer.portConfigFileRelativePath = encodeURIComponent(
-                nodeServer.portConfigFileRelativePath,
+                nodeServer.portConfigFileRelativePath
               );
               nodeServer.portReg = encodeURIComponent(nodeServer.portReg);
 
@@ -708,17 +860,27 @@ function NodeServerManagement() {
           if (modifyNodeServerType === '批量添加修改') {
             jsonFetcher('/api/nodeServers/batch', 'POST', nodeServers).then(
               () => {
-                message.success('保存服务成功');
+                message.success(
+                  intl.formatMessage({
+                    id: 'key0052',
+                    defaultMessage: '保存服务成功',
+                  })
+                );
                 refetchNpmProjects();
                 setModifyNodeServerType(null);
-              },
+              }
             );
             return;
           }
 
           nodeServers.forEach((nodeServer) => {
             jsonFetcher('/api/nodeServers', 'POST', nodeServer).then(() => {
-              message.success('保存服务成功');
+              message.success(
+                intl.formatMessage({
+                  id: 'key0052',
+                  defaultMessage: '保存服务成功',
+                })
+              );
               refetchNpmProjects();
               setModifyNodeServerType(null);
             });
@@ -761,11 +923,11 @@ function NodeServerManagement() {
               onClick={() =>
                 jsonFetcher(
                   `/api/nodeServers/clearLog/${currentNodeServer}`,
-                  'GET',
+                  'GET'
                 ).then(() => refetchLog())
               }
             >
-              清除日志
+              <FormattedMessage id="key0053" defaultMessage="清除日志" />
             </Button>
           </Space>
         }

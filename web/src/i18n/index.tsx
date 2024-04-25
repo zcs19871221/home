@@ -12,6 +12,7 @@ import type { AvailableLocale, LocalKey } from './types.ts';
 
 export interface LocaleContextValue {
   readonly locale: AvailableLocale;
+  readonly availableLocales: AvailableLocale[];
   readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
 }
 
@@ -76,10 +77,11 @@ export function LocaleProvider({
 
   const value = useMemo(
     (): LocaleContextValue => ({
+      availableLocales: ['en-us', 'zh-cn'],
       locale,
       setLocale,
     }),
-    [locale]
+    [locale],
   );
 
   return (

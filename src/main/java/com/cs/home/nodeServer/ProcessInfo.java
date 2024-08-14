@@ -1,4 +1,4 @@
-package com.cs.home.NodeServers;
+package com.cs.home.nodeServer;
 
 
 import lombok.Getter;
@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 
 @Getter
@@ -17,8 +16,6 @@ public class ProcessInfo {
     private final File logFile;
     private final FileInputStream readStream;
     private final BufferedReader br;
-    private final Integer prevServerId;
-    private final List<Integer> postServerIds;
 
     private NodeServerStatus status = NodeServerStatus.CLOSED;
     private Integer id;
@@ -26,8 +23,8 @@ public class ProcessInfo {
     private String command;
     private String path;
 
-    public ProcessInfo(Process process, NodeServer server, File logFile,
-                       Integer prevServerId, List<Integer> postServerIds) throws FileNotFoundException {
+    public ProcessInfo(Process process, NodeServer server, File logFile
+    ) throws FileNotFoundException {
         this.process = process;
         this.server = server;
         this.logFile = logFile;
@@ -35,7 +32,5 @@ public class ProcessInfo {
         this.br = new BufferedReader(new InputStreamReader(this.readStream, StandardCharsets.UTF_8)
         );
         this.id = server.getId();
-        this.prevServerId = prevServerId;
-        this.postServerIds = postServerIds;
     }
 }

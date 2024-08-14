@@ -1,25 +1,21 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
-import com.cs.home.NodeServers.NodeServerResponse;
+import com.cs.home.nodeServer.NodeServerResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.Set;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NpmProjectResponse {
+    private Integer id;
 
-    private final String path;
+    private String path;
 
-    private final Integer id;
+    private String description;
 
     private Set<NodeServerResponse> nodeServers;
-
-    private String errorMsg;
-
 }

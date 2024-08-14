@@ -1,4 +1,4 @@
-package com.cs.home.NodeServers;
+package com.cs.home.nodeServer;
 
 public enum NodeServerStatus {
     CLOSED,

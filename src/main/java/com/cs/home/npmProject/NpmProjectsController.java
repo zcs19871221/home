@@ -1,4 +1,4 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
 import com.cs.home.common.Response;
 import lombok.AllArgsConstructor;

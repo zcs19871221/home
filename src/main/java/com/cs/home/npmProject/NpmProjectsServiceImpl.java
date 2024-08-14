@@ -1,9 +1,7 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
 
-import com.cs.home.NodeServers.NodeServer;
-import com.cs.home.NodeServers.NodeServerResponse;
-import com.cs.home.NodeServers.NodeServersService;
+import com.cs.home.nodeServer.NodeServersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,9 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,32 +23,14 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
     private final NpmProjectMapper npmProjectMapper;
 
 
-    private NpmProjectResponse map(NpmProject npmProject) throws Exception {
-        NpmProjectResponse npmProjectResponse =
-                npmProjectMapper.map((npmProject));
-        if (npmProject.getNodeServers() != null) {
-            Set<NodeServerResponse> nodeServerResponses = new HashSet<>();
-            for (NodeServer nodeServer : npmProject.getNodeServers()) {
-                nodeServerResponses.add(nodeServersService.map(nodeServer));
-            }
-            npmProjectResponse.setNodeServers(nodeServerResponses);
-        }
-        return npmProjectResponse;
-    }
-
-
     @Override
     @Transactional
-    public NpmProjectResponse save(NpmProjectCreated createFrontEndProjectPayload) throws Exception {
+    public NpmProjectResponse save(NpmProjectCreated createFrontEndProjectPayload) {
 
-        NpmProject project =
+        NpmProject npmProject =
                 npmProjectMapper.map(createFrontEndProjectPayload);
-        String errorMsg = NpmProjectHelper.checkPath(project);
-        if (errorMsg != null) {
-            throw new RuntimeException(errorMsg);
-        }
-        npmProjectsRepository.save(project);
-        return map(project);
+        npmProjectsRepository.save(npmProject);
+        return npmProjectMapper.map(npmProject);
     }
 
     @Override
@@ -63,18 +41,14 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
         npmProjectMapper.updateNpmProject(npmProject,
                 npmProjectMapper.map(npmProjectUpdated));
-        String errorMsg = NpmProjectHelper.checkPath(npmProject);
-        if (errorMsg != null) {
-            throw new RuntimeException(errorMsg);
-        }
         npmProjectsRepository.save(npmProject);
-        return map(npmProject);
+        return npmProjectMapper.map(npmProject);
     }
 
     @Override
     @Transactional
     public void delete(Integer id) throws IOException {
-        nodeServersService.stopServer(id);
+        nodeServersService.stop(id);
         npmProjectsRepository.deleteById(id);
     }
 
@@ -106,7 +80,7 @@ public class NpmProjectsServiceImpl implements NpmProjectsService {
 
         return npmProjects.stream().map(npmProject -> {
             try {
-                return map(npmProject);
+                return npmProjectMapper.map(npmProject);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

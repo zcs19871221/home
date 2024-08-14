@@ -1,4 +1,4 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
 
 import java.io.IOException;

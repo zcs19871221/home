@@ -5,11 +5,11 @@ import javax.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = PathValidator.class)
+@Constraint(validatedBy = FileValidator.class)
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PathExists {
-    String message() default "File or directory not exists";
+public @interface File {
+    String message() default "File not exists";
 
     Class<?>[] groups() default {};
 

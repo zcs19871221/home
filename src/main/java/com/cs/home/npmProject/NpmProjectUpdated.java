@@ -1,13 +1,12 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
-import com.cs.home.common.PathExists;
+import com.cs.home.common.Directory;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
 
 @Getter
 @Setter
@@ -15,9 +14,12 @@ import java.nio.file.Path;
 @Jacksonized
 public class NpmProjectUpdated {
     @NotNull
-    private Integer id;
-    
+    @Directory
+    private String path;
+
+    private String description;
+
     @NotNull
-    @PathExists
-    private Path path;
+    private Integer id;
+
 }

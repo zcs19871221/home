@@ -1,6 +1,6 @@
-package com.cs.home.NpmProjects;
+package com.cs.home.npmProject;
 
-import com.cs.home.NodeServers.NodeServer;
+import com.cs.home.nodeServer.NodeServer;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,7 +24,11 @@ public class NpmProject {
     @Column(unique = true, nullable = false)
     private String path;
 
-    @OneToMany(mappedBy = "npmProject", orphanRemoval = true)
+
+    @Size(max = 50)
+    private String description;
+
+    @OneToMany(mappedBy = "npmProject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeServer> nodeServers;
 
     public void addNodeServer(NodeServer nodeServer) {

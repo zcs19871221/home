@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Directory {
-    String message() default "Directory not exists";
+    String message() default "{directoryNotExists}";
 
     Class<?>[] groups() default {};
 

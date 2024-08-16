@@ -1,13 +1,14 @@
 /* eslint-disable no-control-regex */
 import { message } from 'antd';
+import useSWR, { SWRConfiguration } from 'swr';
 
-export const base = 'http://localhost:9981';
+export const base = 'http://localhost:9981/api';
 
-export const jsonFetcher = async (
+export const jsonFetcher = async <T,>(
   url: string,
   method: 'POST' | 'PUT' | 'DELETE' | 'GET',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: Record<string, any> | string,
+  body?: T,
 ) => {
   try {
     const res = await window.fetch(`${base}${url}`, {
@@ -48,3 +49,18 @@ export const bufferFetcher = (url: string) =>
         .replace(//g, '')
         .replace(/(\x00)+/g, '\n'),
     );
+
+export const useAppSwr = <Response,>(
+  url?: string,
+  opt: SWRConfiguration = {},
+) =>
+  useSWR<Response>(
+    url ? `${base}/${url.startsWith('/') ? url.slice(1) : url}` : undefined,
+    {
+      revalidateIfStale: false,
+      revalidateOnMount: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      ...opt,
+    },
+  );

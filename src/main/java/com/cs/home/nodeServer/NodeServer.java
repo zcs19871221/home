@@ -19,6 +19,7 @@ public class NodeServer {
     private Integer id;
 
     @NotNull
+    @Column(unique = true)
     private Integer port;
 
     @NotEmpty

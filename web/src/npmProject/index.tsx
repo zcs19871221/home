@@ -107,7 +107,7 @@ export default function Project() {
     <div>
       <div className="flex justify-center items-center h-8 ">
         <h2 className="mr-auto">项目管理</h2>
-        <Tooltip title="增加npmProject">
+        <Tooltip title="增加npmProject" placement="leftBottom">
           <FileAddOutlined
             onClick={() => {
               npmProjectForm.setFieldsValue({

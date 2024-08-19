@@ -6,7 +6,7 @@ import { SWRConfig } from 'swr';
 
 import './index.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import { Content } from 'antd/es/layout/layout';
+import { Content, Header } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
 
 export type AvailableLocale = 'zh-CN' | 'en-US';
@@ -42,37 +42,43 @@ export const App = () => {
         }}
       >
         <Layout style={{ minHeight: '100vh' }}>
-          <Sider>
-            <Menu
-              mode="inline"
-              onClick={(item) => {
-                navigate(item.key);
-              }}
-              items={[
-                {
-                  key: 'project',
-                  label: '项目',
-                  icon: <ProjectOutlined />,
-                },
-                {
-                  key: 'server',
-                  label: '服务',
-                  icon: <CloudServerOutlined />,
-                },
-              ]}
-            />
-          </Sider>
+          <Header className="text-white flex items-center">
+            <div>前端管理系统</div>
+            <div className="ml-auto cursor-pointer">关闭系统</div>
+          </Header>
           <Layout>
-            <Content>
-              <Suspense fallback={<div>loading</div>}>
-                <div className="ml-4 mr-4">
-                  <Routes>
-                    <Route path="/project" element={<NpmProject />} />
-                    <Route path="/server" element={<NodeServer />} />
-                  </Routes>
-                </div>
-              </Suspense>
-            </Content>
+            <Sider>
+              <Menu
+                mode="inline"
+                onClick={(item) => {
+                  navigate(item.key);
+                }}
+                items={[
+                  {
+                    key: 'project',
+                    label: '项目',
+                    icon: <ProjectOutlined />,
+                  },
+                  {
+                    key: 'server',
+                    label: '服务',
+                    icon: <CloudServerOutlined />,
+                  },
+                ]}
+              />
+            </Sider>
+            <Layout>
+              <Content>
+                <Suspense fallback={<div>loading</div>}>
+                  <div className="ml-4 mr-4">
+                    <Routes>
+                      <Route path="/project" element={<NpmProject />} />
+                      <Route path="/server" element={<NodeServer />} />
+                    </Routes>
+                  </div>
+                </Suspense>
+              </Content>
+            </Layout>
           </Layout>
         </Layout>
       </ConfigProvider>

@@ -1,3 +1,4 @@
+import { useIntl, FormattedMessage } from 'react-intl';
 import { Button, Modal, Table, Tag, TagProps, Tooltip, message } from 'antd';
 
 import {
@@ -5,7 +6,6 @@ import {
   CaretRightOutlined,
   ClearOutlined,
   FileOutlined,
-  FolderOpenOutlined,
   RedoOutlined,
 } from '@ant-design/icons';
 import { ReactNode, useMemo, useRef, useState } from 'react';
@@ -15,10 +15,19 @@ import { bufferFetcher, jsonFetcher, useAppSwr } from '../common/fetcher.tsx';
 import { Process, processesApiBase } from '../projects/types.ts';
 import { LogInfo, ProcessesStatus } from './types.ts';
 import VscodeOpener from '../common/VscodeOpener.tsx';
+import { i18n } from '../i18n/index.tsx';
 
 const operator = (type: 'start' | 'stop' | 'restart', processesId: number) =>
   jsonFetcher(`${processesApiBase}/${processesId}/${type}`, 'PUT').then(() => {
-    message.success(`${type}指令已发送`);
+    message.success(
+      i18n.intl.formatMessage(
+        {
+          id: 'key0007',
+          defaultMessage: '{v1}指令已发送',
+        },
+        { v1: type },
+      ),
+    );
   });
 
 const Status = ({
@@ -40,34 +49,54 @@ const Status = ({
   onClick: () => void;
   refetchLog: () => void;
 }) => {
+  const intl = useIntl();
+
   let text = '';
   let color: TagProps['color'] = 'processing';
 
   if (logInfo?.status === undefined) {
-    text = '未开启';
+    text = intl.formatMessage({
+      id: 'key0008',
+      defaultMessage: '未开启',
+    });
     color = 'grey';
   } else {
     const { status } = logInfo;
 
     switch (status) {
       case ProcessesStatus.CLOSED:
-        text = '已关闭';
+        text = intl.formatMessage({
+          id: 'key0009',
+          defaultMessage: '已关闭',
+        });
         color = 'grey';
         break;
       case ProcessesStatus.ERROR:
-        text = '错误';
+        text = intl.formatMessage({
+          id: 'key0010',
+          defaultMessage: '错误',
+        });
         color = 'error';
         break;
       case ProcessesStatus.COMPILING:
-        text = '编译中..';
+        text = intl.formatMessage({
+          id: 'key0011',
+          defaultMessage: '编译中..',
+        });
         color = 'processing';
         break;
       case ProcessesStatus.SUCCESS:
-        text = '成功';
+        text = intl.formatMessage({
+          id: 'key0012',
+          defaultMessage: '成功',
+        });
         color = 'success';
         break;
       case ProcessesStatus.UNKNOWN:
-        text = '未知';
+        text = intl.formatMessage({
+          id: 'key0013',
+          defaultMessage: '未知',
+        });
         color = 'warning';
         break;
       default: {
@@ -91,7 +120,12 @@ const Status = ({
         </Tag>
       </div>
       <div className=" text-grey mt-2">
-        <Tooltip title="启动服务">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0014',
+            defaultMessage: '启动服务',
+          })}
+        >
           <Button
             type="text"
             disabled={
@@ -106,7 +140,12 @@ const Status = ({
             <CaretRightOutlined />
           </Button>
         </Tooltip>
-        <Tooltip title="关闭服务">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0015',
+            defaultMessage: '关闭服务',
+          })}
+        >
           <Button
             type="text"
             disabled={
@@ -121,7 +160,12 @@ const Status = ({
             <BorderOutlined />
           </Button>
         </Tooltip>
-        <Tooltip title="重启服务">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0016',
+            defaultMessage: '重启服务',
+          })}
+        >
           <Button
             type="text"
             onClick={() => {
@@ -136,7 +180,12 @@ const Status = ({
             <RedoOutlined />
           </Button>
         </Tooltip>
-        <Tooltip title="查看日志">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0017',
+            defaultMessage: '查看日志',
+          })}
+        >
           <Button
             type="text"
             onClick={() => {
@@ -146,7 +195,12 @@ const Status = ({
             <FileOutlined />
           </Button>
         </Tooltip>
-        <Tooltip title="清除日志">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0018',
+            defaultMessage: '清除日志',
+          })}
+        >
           <Button
             type="text"
             onClick={() => {
@@ -166,6 +220,8 @@ const Status = ({
 };
 
 export default function ProcessesComponent() {
+  const intl = useIntl();
+
   const { data, isLoading } = useAppSwr<Process[]>(processesApiBase);
 
   const { data: processesInfo, mutate: refetchServerInfo } = useAppSwr<{
@@ -219,7 +275,9 @@ export default function ProcessesComponent() {
               type="link"
               onClick={() => {
                 jsonFetcher(
-                  `/system/run?command=${encodeURIComponent(`code ${locate}:${row}:${col}`)}`,
+                  `/system/run?command=${encodeURIComponent(
+                    `code ${locate}:${row}:${col}`,
+                  )}`,
                   'GET',
                 );
               }}
@@ -257,7 +315,9 @@ export default function ProcessesComponent() {
   return (
     <div>
       <div className="flex justify-center items-center h-8">
-        <h2 className="mr-auto">服务管理</h2>
+        <h2 className="mr-auto">
+          <FormattedMessage id="key0019" defaultMessage="服务管理" />
+        </h2>
       </div>
       <Table
         rowKey="id"
@@ -266,7 +326,10 @@ export default function ProcessesComponent() {
         loading={isLoading}
         columns={[
           {
-            title: '描述',
+            title: intl.formatMessage({
+              id: 'key0020',
+              defaultMessage: '描述',
+            }),
             dataIndex: 'description',
             render: (_val, record: Process) => (
               <div>
@@ -285,14 +348,26 @@ export default function ProcessesComponent() {
               </div>
             ),
           },
-          { title: '命令', dataIndex: 'command' },
           {
-            title: '端口',
+            title: intl.formatMessage({
+              id: 'key0021',
+              defaultMessage: '命令',
+            }),
+            dataIndex: 'command',
+          },
+          {
+            title: intl.formatMessage({
+              id: 'key0022',
+              defaultMessage: '端口',
+            }),
             dataIndex: 'port',
           },
           {
             dataIndex: ['project', 'path'],
-            title: '地址',
+            title: intl.formatMessage({
+              id: 'key0023',
+              defaultMessage: '地址',
+            }),
           },
         ]}
       />

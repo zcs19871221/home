@@ -4,11 +4,11 @@ import useSWR, { SWRConfiguration } from 'swr';
 
 export const base = 'http://localhost:9981/api';
 
-export const jsonFetcher = async <T,>(
+export const jsonFetcher = async <T>(
   url: string,
   method: 'POST' | 'PUT' | 'DELETE' | 'GET',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: T,
+  body?: T
 ) => {
   try {
     const res = await window.fetch(`${base}${url}`, {
@@ -47,13 +47,10 @@ export const bufferFetcher = (url: string) =>
         .replace(/\[33m/g, '')
         .replace(/\[39m/g, '')
         .replace(//g, '')
-        .replace(/(\x00)+/g, '\n'),
+        .replace(/(\x00)+/g, '\n')
     );
 
-export const useAppSwr = <Response,>(
-  url?: string,
-  opt: SWRConfiguration = {},
-) =>
+export const useAppSwr = <Response>(url?: string, opt: SWRConfiguration = {}) =>
   useSWR<Response>(
     url ? `${base}/${url.startsWith('/') ? url.slice(1) : url}` : undefined,
     {
@@ -62,5 +59,5 @@ export const useAppSwr = <Response,>(
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       ...opt,
-    },
+    }
   );

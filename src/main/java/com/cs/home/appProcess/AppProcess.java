@@ -1,24 +1,22 @@
-package com.cs.home.nodeServer;
+package com.cs.home.appProcess;
 
-import com.cs.home.npmProject.NpmProject;
+import com.cs.home.project.Project;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 @Entity
 @Getter
 @Setter
 @Valid
-public class NodeServer {
+public class AppProcess {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
-    @NotNull
     @Column(unique = true)
     private Integer port;
 
@@ -28,5 +26,5 @@ public class NodeServer {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private NpmProject npmProject;
+    private Project project;
 }

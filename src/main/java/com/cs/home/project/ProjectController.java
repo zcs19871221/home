@@ -1,4 +1,4 @@
-package com.cs.home.npmProject;
+package com.cs.home.project;
 
 import com.cs.home.common.Response;
 import lombok.AllArgsConstructor;
@@ -12,11 +12,11 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping(path = "/api/npmProjects")
+@RequestMapping(path = "/api/projects")
 @CrossOrigin
-public class NpmProjectsController {
+public class ProjectController {
 
-    private final NpmProjectsService service;
+    private final ProjectService service;
 
     @PutMapping("/shutdown")
     public Response<String> shutDown() {
@@ -25,23 +25,23 @@ public class NpmProjectsController {
     }
 
     @GetMapping
-    public Response<List<NpmProjectResponse>> list() throws Exception {
-        List<NpmProjectResponse> seResponses = service.list();
+    public Response<List<ProjectResponse>> list() throws Exception {
+        List<ProjectResponse> seResponses = service.list();
         return Response.create(seResponses);
     }
 
     @PutMapping
-    public Response<NpmProjectResponse> update(@Valid @RequestBody NpmProjectUpdated npmProjectUpdated) throws Exception {
-        return Response.create(service.update(npmProjectUpdated));
+    public Response<ProjectResponse> update(@Valid @RequestBody ProjectUpdated projectUpdated) throws Exception {
+        return Response.create(service.update(projectUpdated));
     }
 
     @PostMapping
-    public Response<NpmProjectResponse> save(@Valid @RequestBody NpmProjectCreated npmProjectCreated) throws Exception {
+    public Response<ProjectResponse> save(@Valid @RequestBody ProjectCreated npmProjectCreated) throws Exception {
         return Response.create(service.save(npmProjectCreated));
     }
 
     @DeleteMapping("/{id}")
-    public Response<String> delete(@PathVariable Integer id) throws IOException {
+    public Response<String> delete(@PathVariable Integer id) throws Exception {
         service.delete(id);
         return Response.EmptyResponse();
     }

@@ -1,4 +1,4 @@
-package com.cs.home.npmProject;
+package com.cs.home.project;
 
 import com.cs.home.common.Directory;
 import lombok.Builder;
@@ -12,11 +12,14 @@ import javax.validation.constraints.NotNull;
 @Setter
 @Builder
 @Jacksonized
-public class NpmProjectCreated {
+public class ProjectUpdated {
     @NotNull
     @Directory
     private String path;
 
     private String description;
+
+    @NotNull
+    private Integer id;
 
 }

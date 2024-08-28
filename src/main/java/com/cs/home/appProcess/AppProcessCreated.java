@@ -1,4 +1,4 @@
-package com.cs.home.nodeServer;
+package com.cs.home.appProcess;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class NodeServerCreated {
+public class AppProcessCreated {
 
     @NotEmpty
     private String command;
@@ -14,7 +14,7 @@ public class NodeServerCreated {
     private String description;
 
     @NotNull
-    private Integer npmProjectId;
+    private Integer projectId;
 
     @NotNull
     private Integer port;

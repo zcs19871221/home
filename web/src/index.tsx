@@ -1,4 +1,4 @@
-import { ConfigProvider, Layout, Menu } from 'antd';
+import { ConfigProvider, Layout, Menu, message } from 'antd';
 import { ProjectOutlined, CloudServerOutlined } from '@ant-design/icons';
 import React, { Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -8,15 +8,16 @@ import './index.css';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Content, Header } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
+import { jsonFetcher } from './common/fetcher.tsx';
 
 export type AvailableLocale = 'zh-CN' | 'en-US';
 
 const fetcher = (url: string) =>
   fetch(url).then((r) => r.json().then((d) => d.data));
 
-const NpmProject = lazy(() => import('./npmProject/index.tsx'));
+const Project = lazy(() => import('./projects/index.tsx'));
 
-const NodeServer = lazy(() => import('./nodeServer/index.tsx'));
+const Processes = lazy(() => import('./processes/index.tsx'));
 
 export const App = () => {
   const navigate = useNavigate();
@@ -44,7 +45,16 @@ export const App = () => {
         <Layout style={{ minHeight: '100vh' }}>
           <Header className="text-white flex items-center">
             <div>前端管理系统</div>
-            <div className="ml-auto cursor-pointer">关闭系统</div>
+            <div
+              className="ml-auto cursor-pointer"
+              onClick={() => {
+                jsonFetcher('/system/shutdown', 'PUT').then(() => {
+                  message.success('后台服务关闭成功');
+                });
+              }}
+            >
+              关闭系统
+            </div>
           </Header>
           <Layout>
             <Sider>
@@ -72,8 +82,8 @@ export const App = () => {
                 <Suspense fallback={<div>loading</div>}>
                   <div className="ml-4 mr-4">
                     <Routes>
-                      <Route path="/project" element={<NpmProject />} />
-                      <Route path="/server" element={<NodeServer />} />
+                      <Route path="/project" element={<Project />} />
+                      <Route path="/server" element={<Processes />} />
                     </Routes>
                   </div>
                 </Suspense>

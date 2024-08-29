@@ -54,30 +54,43 @@ public class AppProcessServiceImpl implements AppProcessService {
     public void start(Integer appProcessId) throws IOException {
 
         if (idMapProcess.containsKey(appProcessId)) {
-            return;
+            stop(appProcessId);
         }
-        AppProcess appProcess = appProcessRepository.getReferenceById(appProcessId);
-        String[] commands = appProcess.getCommand().split(" ");
-        if (System.getProperty("os.name").startsWith("Windows") && !commands[0].startsWith(".")) {
-            commands[0] = commands[0] + ".cmd";
+        File log = new File(getLogPath(appProcessId));
+        if (log.exists()) {
+            clearLog(appProcessId);
         }
 
-        ProcessBuilder pb = new ProcessBuilder(commands);
-        pb.directory(new File(appProcess.getProject().getPath()));
-        pb.redirectErrorStream(true);
-        File log =
-                new File(getLogPath(appProcessId));
-        pb.redirectOutput(log);
-        Process p = pb.start();
+        AppProcess appProcess = appProcessRepository.getReferenceById(appProcessId);
+
+
+        Process process = run(appProcess.getCommand(),
+                appProcess.getProject().getPath(),
+                new File(getLogPath(appProcessId)));
 
         FileInputStream fileInputStream = new FileInputStream(log);
         BufferedReader br =
                 new BufferedReader(new InputStreamReader(fileInputStream,
                         StandardCharsets.UTF_8)
                 );
-        idMapProcess.put(appProcessId, new RunningProcess(p, fileInputStream,
-                br, appProcessId));
+
+        RunningProcess rp = new RunningProcess(process, fileInputStream,
+                br, appProcessId);
+        rp.setStatus("RUNNING");
+        idMapProcess.put(appProcessId, rp);
     }
+
+    public Process run(String command, String cwd, File log) throws IOException {
+
+        String[] commands = command.split(" ");
+
+        ProcessBuilder pb = new ProcessBuilder(commands);
+        pb.directory(new File(cwd));
+        pb.redirectErrorStream(true);
+        pb.redirectOutput(log);
+        return pb.start();
+    }
+
 
     @Override
     public void stop(Integer appProcessId) throws IOException {
@@ -93,10 +106,7 @@ public class AppProcessServiceImpl implements AppProcessService {
 
         runningProcess.getBr().close();
         runningProcess.getFileInputStream().close();
-
-        clearLog(appProcessId);
-
-        idMapProcess.remove(appProcessId);
+        runningProcess.setStatus("CLOSED");
     }
 
     @Override
@@ -184,10 +194,15 @@ public class AppProcessServiceImpl implements AppProcessService {
                 idMapProcess.entrySet()) {
             Integer appProcessId = numberProcessInfoEntry.getKey();
             RunningProcess runningProcess = numberProcessInfoEntry.getValue();
+            boolean needCleanLog = false;
+
+            if (!runningProcess.getProcess().isAlive()) {
+                stop(appProcessId);
+                continue;
+            }
             String strLine;
 
             StringBuilder newStr = new StringBuilder();
-            boolean needCleanLog = false;
             while ((strLine = runningProcess.getBr().readLine()) != null) {
                 newStr.append(strLine);
                 if (strLine.contains("Compiling ")) {

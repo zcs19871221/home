@@ -17,8 +17,8 @@ export default function VscodeOpener({ command }: { command?: string }) {
         type="text"
         onClick={() => {
           jsonFetcher(
-            `/system/run?command=${encodeURIComponent(`code ${command}`)}`,
-            'GET'
+            `/system/run?command=${encodeURIComponent(`code.cmd ${command}`)}`,
+            'GET',
           );
         }}
       >

@@ -53,27 +53,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
 
-    public void vsCode(String target) throws IOException {
-        ProcessBuilder p = new ProcessBuilder("code.cmd", target);
-        p.start();
-    }
-
-
-    public void openNpmProject(Integer npmProjectId) throws IOException {
-        Project npmProject =
-                projectsRepository.getReferenceById(npmProjectId);
-        String path = URLDecoder.decode(npmProject.getPath(), StandardCharsets.UTF_8);
-
-        ProcessBuilder p = new ProcessBuilder("code.cmd", path);
-        p.start();
-    }
-
-    @Override
-    public void locateErrorWithVscode(String path) throws IOException {
-        ProcessBuilder p = new ProcessBuilder("code.cmd", "-g", path);
-        p.start();
-    }
-
     @Override
     public List<ProjectResponse> list() throws Exception {
         List<Project> npmProjects = projectsRepository.findAll();

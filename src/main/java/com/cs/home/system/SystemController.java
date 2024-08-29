@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -29,13 +30,9 @@ public class SystemController {
     }
 
     @GetMapping("/run")
-    Response<String> shutdown(String command) throws IOException {
-        command = URLDecoder.decode(command);
+    Response<String> run(String command) throws IOException {
+        command = URLDecoder.decode(command, StandardCharsets.UTF_8);
         String[] commands = command.split(" ");
-        if (System.getProperty("os.name").startsWith("Windows") && !commands[0].startsWith(".")) {
-            commands[0] = commands[0] + ".cmd";
-        }
-
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.start();
         return Response.EmptyResponse();

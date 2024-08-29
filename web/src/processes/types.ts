@@ -1,6 +1,6 @@
 export enum ProcessesStatus {
   CLOSED = 'CLOSED',
-  COMPILING = 'COMPILING',
+  RUNNING = 'COMPILING',
   ERROR = 'ERROR',
   SUCCESS = 'SUCCESS',
   UNKNOWN = 'UNKNOWN',

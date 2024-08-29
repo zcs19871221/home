@@ -78,10 +78,10 @@ const Status = ({
         });
         color = 'error';
         break;
-      case ProcessesStatus.COMPILING:
+      case ProcessesStatus.RUNNING:
         text = intl.formatMessage({
           id: 'key0011',
-          defaultMessage: '编译中..',
+          defaultMessage: '运行中..',
         });
         color = 'processing';
         break;
@@ -276,7 +276,7 @@ export default function ProcessesComponent() {
               onClick={() => {
                 jsonFetcher(
                   `/system/run?command=${encodeURIComponent(
-                    `code ${locate}:${row}:${col}`,
+                    `code.cmd ${locate}:${row}:${col}`,
                   )}`,
                   'GET',
                 );

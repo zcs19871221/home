@@ -73,7 +73,7 @@ export const App = () => {
             </div>
             <Select onChange={setLocale} value={locale} className="ml-5 w-28">
               <Option value="en-us">English</Option>
-              <Option value="zh-cn">{/* @ignore */}中文</Option>
+              <Option value="zh-cn">中文</Option>
             </Select>
           </Header>
           <Layout>

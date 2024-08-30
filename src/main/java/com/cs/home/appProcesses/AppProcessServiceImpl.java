@@ -1,5 +1,7 @@
 package com.cs.home.appProcesses;
 
+import com.cs.home.appProcessStatus.AppProcessStatus;
+import com.cs.home.appProcessStatus.AppProcessStatusRepository;
 import com.cs.home.projects.Project;
 import com.cs.home.projects.ProjectsRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -33,6 +35,8 @@ public class AppProcessServiceImpl implements AppProcessService {
 
     private final ProjectsRepository projectsRepository;
 
+    private final AppProcessStatusRepository appProcessStatusRepository;
+
     private final AppProcessMapper appProcessMapper;
     private final MessageSource messageSource;
 
@@ -53,42 +57,24 @@ public class AppProcessServiceImpl implements AppProcessService {
 
     public void start(Integer appProcessId) throws IOException {
 
-        if (idMapProcess.containsKey(appProcessId)) {
-            stop(appProcessId);
-        }
-        File log = new File(getLogPath(appProcessId));
-        if (log.exists()) {
-            clearLog(appProcessId);
+        if (idMapProcess.containsKey(appProcessId) && idMapProcess.get(appProcessId).getProcess().isAlive()) {
+            return;
         }
 
+        File log = new File(getLogPath(appProcessId));
         AppProcess appProcess = appProcessRepository.getReferenceById(appProcessId);
 
+        RunningProcess rp;
+        if (!idMapProcess.containsKey(appProcessId)) {
+            rp = new RunningProcess(appProcess.getCommand().split(" "),
+                    appProcess.getProject().getPath(), log);
+        } else {
+            rp = idMapProcess.get(appProcessId);
+            rp.start(appProcess.getCommand().split(" "),
+                    appProcess.getProject().getPath(), log);
+        }
 
-        Process process = run(appProcess.getCommand(),
-                appProcess.getProject().getPath(),
-                new File(getLogPath(appProcessId)));
-
-        FileInputStream fileInputStream = new FileInputStream(log);
-        BufferedReader br =
-                new BufferedReader(new InputStreamReader(fileInputStream,
-                        StandardCharsets.UTF_8)
-                );
-
-        RunningProcess rp = new RunningProcess(process, fileInputStream,
-                br, appProcessId);
-        rp.setStatus("RUNNING");
         idMapProcess.put(appProcessId, rp);
-    }
-
-    public Process run(String command, String cwd, File log) throws IOException {
-
-        String[] commands = command.split(" ");
-
-        ProcessBuilder pb = new ProcessBuilder(commands);
-        pb.directory(new File(cwd));
-        pb.redirectErrorStream(true);
-        pb.redirectOutput(log);
-        return pb.start();
     }
 
 
@@ -99,13 +85,8 @@ public class AppProcessServiceImpl implements AppProcessService {
         }
 
         RunningProcess runningProcess = idMapProcess.get(appProcessId);
-
-
         runningProcess.getProcess().descendants().forEach(ProcessHandle::destroy);
         runningProcess.getProcess().destroy();
-
-        runningProcess.getBr().close();
-        runningProcess.getFileInputStream().close();
         runningProcess.setStatus("CLOSED");
     }
 
@@ -120,6 +101,13 @@ public class AppProcessServiceImpl implements AppProcessService {
     public AppProcessResponse create(AppProcessCreated appProcessCreated) throws Exception {
         AppProcess appProcess =
                 appProcessMapper.map(appProcessCreated);
+        for (Integer appProcessStatusId : appProcessCreated.getAppProcessStatusIds()) {
+            AppProcessStatus appProcessStatus =
+                    appProcessStatusRepository.getReferenceById(appProcessStatusId);
+            appProcess.add(appProcessStatus);
+        }
+
+
         valid(appProcessCreated.getProjectId());
         appProcess.setProject(projectsRepository.getReferenceById(appProcessCreated.getProjectId()));
         return appProcessMapper.map(appProcessRepository.save(appProcess));
@@ -137,11 +125,18 @@ public class AppProcessServiceImpl implements AppProcessService {
                     locale));
         }
 
+
         Integer projectId = appProcessUpdated.getProjectId();
         valid(projectId);
 
 
         AppProcess appProcess = appProcessMapper.map(appProcessUpdated);
+
+        for (Integer appProcessStatusId : appProcessUpdated.getAppProcessStatusIds()) {
+            AppProcessStatus appProcessStatus =
+                    appProcessStatusRepository.getReferenceById(appProcessStatusId);
+            appProcess.add(appProcessStatus);
+        }
 
         Project project =
                 projectsRepository.getReferenceById(projectId);

@@ -4,6 +4,8 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class AppProcessUpdated {
@@ -19,7 +21,8 @@ public class AppProcessUpdated {
     @NotNull
     private Integer projectId;
 
-    @NotNull
     private Integer port;
+
+    private Set<Integer> appProcessStatusIds = new HashSet<>();
 
 }

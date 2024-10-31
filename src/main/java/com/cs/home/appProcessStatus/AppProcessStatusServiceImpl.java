@@ -41,4 +41,5 @@ public class AppProcessStatusServiceImpl implements AppProcessStatusService {
         List<AppProcessStatus> list = appProcessStatusRepository.findAll();
         return appProcessStatusMapper.map(list);
     }
+
 }

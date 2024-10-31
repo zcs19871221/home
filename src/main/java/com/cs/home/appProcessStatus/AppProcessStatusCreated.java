@@ -1,22 +1,24 @@
 package com.cs.home.appProcessStatus;
 
-import com.cs.home.appProcesses.AppProcess;
 import lombok.Data;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Data
 public class AppProcessStatusCreated {
     @NotEmpty
-    private String matcher;
+    private Set<String> matchers;
 
     @NotEmpty
-    private String name;
+    private String label;
 
     @NotEmpty
     private String color;
+
+    private Boolean clear = false;
+
+    @NotEmpty
+    private String name;
 
 }

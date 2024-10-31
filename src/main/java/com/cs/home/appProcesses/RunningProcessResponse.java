@@ -8,5 +8,7 @@ import lombok.Setter;
 @Setter
 public class RunningProcessResponse {
     private Integer appProcessId;
-    private String status;
+    private String label;
+    private String color;
+    private Boolean running;
 }

@@ -1,8 +1,6 @@
 package com.cs.home.appProcesses;
 
 import com.cs.home.appProcessStatus.AppProcessStatusMapper;
-import com.cs.home.projects.Project;
-import com.cs.home.projects.ProjectResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -14,8 +12,6 @@ import java.util.Map;
         NullValuePropertyMappingStrategy.IGNORE, uses =
         AppProcessStatusMapper.class)
 public interface AppProcessMapper {
-    @Mapping(target = "appProcesses", source = "appProcesses", ignore = true)
-    ProjectResponse map(Project project);
 
     @Mapping(target = "appProcessStatuses", source = "appProcessStatusIds", ignore = true)
     AppProcess map(AppProcessUpdated processUpdated);

@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AppProcessStatusMapper {
@@ -15,5 +16,8 @@ public interface AppProcessStatusMapper {
 
     AppProcessStatusResponse map(AppProcessStatus appProcessStatus);
 
+    Set<AppProcessStatusResponse> map(Set<AppProcessStatus> appProcessStatuses);
+
     List<AppProcessStatusResponse> map(List<AppProcessStatus> appProcessStatuses);
+
 }

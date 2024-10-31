@@ -1,21 +1,51 @@
 import { useIntl, FormattedMessage } from 'react-intl';
-import { Button, Modal, Table, Tag, TagProps, Tooltip, message } from 'antd';
+import {
+  AutoComplete,
+  Button,
+  Form,
+  Input,
+  Modal,
+  Table,
+  Tag,
+  Tooltip,
+  message,
+} from 'antd';
 
 import {
   BorderOutlined,
   CaretRightOutlined,
   ClearOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleFilled,
+  FileAddOutlined,
   FileOutlined,
+  FolderOpenOutlined,
   RedoOutlined,
 } from '@ant-design/icons';
 import { ReactNode, useMemo, useRef, useState } from 'react';
 import { css } from '@linaria/core';
 
-import { bufferFetcher, jsonFetcher, useAppSwr } from '../common/fetcher.tsx';
-import { Process, processesApiBase } from '../projects/types.ts';
-import { LogInfo, ProcessesStatus } from './types.ts';
-import VscodeOpener from '../common/VscodeOpener.tsx';
+import Select, { DefaultOptionType } from 'antd/es/select/index';
+import useSWR from 'swr';
+import {
+  base,
+  bufferFetcher,
+  jsonFetcher,
+  useAppSwr,
+} from '../common/fetcher.tsx';
+
+import {
+  LogInfo,
+  Process,
+  processesApiBase,
+  ProcessesCreatedOrUpdated,
+} from './types.ts';
 import { i18n } from '../i18n/index.tsx';
+import useDebouncedValue from '../common/useDebouncedValue.tsx';
+import safeParse from '../common/safeParse.ts';
+import { statusColumns } from '../logStatus/index.tsx';
+import { StatusResponse, statusApiBase } from '../logStatus/types.ts';
 
 const operator = (type: 'start' | 'stop' | 'restart', processesId: number) =>
   jsonFetcher(`${processesApiBase}/${processesId}/${type}`, 'PUT').then(() => {
@@ -51,75 +81,28 @@ const Status = ({
 }) => {
   const intl = useIntl();
 
-  let text = '';
-  let color: TagProps['color'] = 'processing';
-
-  if (logInfo?.status === undefined) {
-    text = intl.formatMessage({
-      id: 'key0008',
-      defaultMessage: '未开启',
-    });
-    color = 'grey';
-  } else {
-    const { status } = logInfo;
-
-    switch (status) {
-      case ProcessesStatus.CLOSED:
-        text = intl.formatMessage({
-          id: 'key0009',
-          defaultMessage: '已关闭',
-        });
-        color = 'grey';
-        break;
-      case ProcessesStatus.ERROR:
-        text = intl.formatMessage({
-          id: 'key0010',
-          defaultMessage: '错误',
-        });
-        color = 'error';
-        break;
-      case ProcessesStatus.RUNNING:
-        text = intl.formatMessage({
-          id: 'key0011',
-          defaultMessage: '运行中..',
-        });
-        color = 'processing';
-        break;
-      case ProcessesStatus.SUCCESS:
-        text = intl.formatMessage({
-          id: 'key0012',
-          defaultMessage: '成功',
-        });
-        color = 'success';
-        break;
-      case ProcessesStatus.UNKNOWN:
-        text = intl.formatMessage({
-          id: 'key0013',
-          defaultMessage: '未知',
-        });
-        color = 'warning';
-        break;
-      default: {
-        const error: never = status;
-        console.error(error);
-      }
-    }
-  }
-
   return (
     <div>
       <div className="flex space-x-2 items-center">
         <div>{processesName ?? ''}</div>
         <Tag
           bordered={false}
-          color={color}
+          color={logInfo?.running ? 'gold' : 'grey'}
           className="flex align-middle cursor-pointer"
           onClick={onClick}
         >
-          {text}
+          {logInfo?.running ? '运行中' : '未运行'}
+        </Tag>
+        <Tag
+          bordered={false}
+          color={logInfo?.color}
+          className="flex align-middle cursor-pointer"
+          onClick={onClick}
+        >
+          {logInfo?.label}
         </Tag>
       </div>
-      <div className=" text-grey mt-2">
+      <div className="text-grey mt-2">
         <Tooltip
           title={intl.formatMessage({
             id: 'key0014',
@@ -128,10 +111,7 @@ const Status = ({
         >
           <Button
             type="text"
-            disabled={
-              logInfo?.status !== ProcessesStatus.CLOSED &&
-              logInfo?.status !== undefined
-            }
+            disabled={logInfo?.running}
             onClick={() => {
               operator('start', processesId).then(() => refetchServerInfo());
             }}
@@ -148,10 +128,7 @@ const Status = ({
         >
           <Button
             type="text"
-            disabled={
-              logInfo?.status === ProcessesStatus.CLOSED ||
-              logInfo?.status === undefined
-            }
+            disabled={!logInfo?.running}
             onClick={() => {
               operator('stop', processesId).then(() => refetchServerInfo());
             }}
@@ -168,13 +145,10 @@ const Status = ({
         >
           <Button
             type="text"
+            disabled={!logInfo?.running}
             onClick={() => {
               operator('restart', processesId).then(() => refetchServerInfo());
             }}
-            disabled={
-              logInfo?.status === ProcessesStatus.CLOSED ||
-              logInfo?.status === undefined
-            }
             className="text-green-600 cursor-pointer"
           >
             <RedoOutlined />
@@ -213,7 +187,24 @@ const Status = ({
             <ClearOutlined />
           </Button>
         </Tooltip>
-        <VscodeOpener command={process?.project.path} />
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0001',
+            defaultMessage: '打开目录',
+          })}
+        >
+          <Button
+            type="text"
+            onClick={() => {
+              jsonFetcher(
+                `/system/run?command=${encodeURIComponent(`code.cmd ${process?.path}`)}`,
+                'GET',
+              );
+            }}
+          >
+            <FolderOpenOutlined />
+          </Button>
+        </Tooltip>
       </div>
     </div>
   );
@@ -222,7 +213,11 @@ const Status = ({
 export default function ProcessesComponent() {
   const intl = useIntl();
 
-  const { data, isLoading } = useAppSwr<Process[]>(processesApiBase);
+  const {
+    data,
+    isLoading,
+    mutate: refreshProcesses,
+  } = useAppSwr<Process[]>(processesApiBase);
 
   const { data: processesInfo, mutate: refetchServerInfo } = useAppSwr<{
     [processesId: number]: LogInfo;
@@ -263,9 +258,9 @@ export default function ProcessesComponent() {
         ids.push(idKey);
         if (errorText) {
           htmlParts.push(
-            <h3 id={idKey} className="text-red-500" key={idKey}>
+            <span id={idKey} className="text-red-500" key={idKey}>
               {errorText}
-            </h3>,
+            </span>,
           );
           return _match;
         }
@@ -312,18 +307,56 @@ export default function ProcessesComponent() {
       (errorAnchorIndexRef.current + 1) % errorAnchorIds.length;
   };
 
+  const [showProcessesForm, setShowProcessesForm] = useState(false);
+
+  const [processesForm] = Form.useForm<ProcessesCreatedOrUpdated>();
+
+  const path = useDebouncedValue(Form.useWatch('path', processesForm));
+
+  const { data: pkgJson } = useSWR(
+    path
+      ? `${base}/system/read?path=${encodeURIComponent(`${path}/package.json`)}`
+      : undefined,
+    bufferFetcher,
+  );
+
+  const { data: logStatuses } = useAppSwr<StatusResponse[]>(statusApiBase);
+
+  const expandedRowRender = (record: Process) => (
+    <Table
+      rowKey="id"
+      columns={statusColumns}
+      dataSource={record.appProcessStatuses}
+      pagination={false}
+    />
+  );
+
+  const { data: paths } = useAppSwr<string[]>(`${processesApiBase}/paths`);
+
   return (
     <div>
       <div className="flex justify-center items-center h-8">
         <h2 className="mr-auto">
           <FormattedMessage id="key0019" defaultMessage="服务管理" />
         </h2>
+        <Tooltip title="添加服务" placement="leftBottom">
+          <Button
+            type="text"
+            onClick={() => {
+              processesForm.resetFields();
+              setShowProcessesForm(true);
+            }}
+          >
+            <FileAddOutlined />
+          </Button>
+        </Tooltip>
       </div>
       <Table
         rowKey="id"
         pagination={false}
         dataSource={data}
         loading={isLoading}
+        expandable={{ expandedRowRender, defaultExpandAllRows: false }}
         columns={[
           {
             title: intl.formatMessage({
@@ -356,18 +389,76 @@ export default function ProcessesComponent() {
             dataIndex: 'command',
           },
           {
-            title: intl.formatMessage({
-              id: 'key0022',
-              defaultMessage: '端口',
-            }),
-            dataIndex: 'port',
-          },
-          {
-            dataIndex: ['project', 'path'],
+            dataIndex: 'path',
             title: intl.formatMessage({
               id: 'key0023',
               defaultMessage: '地址',
             }),
+          },
+          {
+            title: i18n.intl.formatMessage({
+              id: 'key0024',
+              defaultMessage: '操作',
+            }),
+            render: (_, processesRecord: Process) => (
+              <div>
+                <Tooltip
+                  title={i18n.intl.formatMessage({
+                    id: 'key0025',
+                    defaultMessage: '删除服务',
+                  })}
+                >
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      Modal.confirm({
+                        title: i18n.intl.formatMessage({
+                          id: 'key0026',
+                          defaultMessage: '是否删除服务?',
+                        }),
+                        icon: <ExclamationCircleFilled />,
+                        onOk() {
+                          jsonFetcher(
+                            `${processesApiBase}/${processesRecord.id}`,
+                            'DELETE',
+                          ).then(() => {
+                            message.success(
+                              i18n.intl.formatMessage({
+                                id: 'key0027',
+                                defaultMessage: '删除成功',
+                              }),
+                            );
+                            refreshProcesses();
+                          });
+                        },
+                      });
+                    }}
+                  >
+                    <DeleteOutlined />
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  title={i18n.intl.formatMessage({
+                    id: 'key0028',
+                    defaultMessage: '编辑服务',
+                  })}
+                >
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      processesForm.setFieldsValue({
+                        ...processesRecord,
+                        appProcessStatusIds:
+                          processesRecord.appProcessStatuses?.map((s) => s.id),
+                      });
+                      setShowProcessesForm(true);
+                    }}
+                  >
+                    <EditOutlined />
+                  </Button>
+                </Tooltip>
+              </div>
+            ),
           },
         ]}
       />
@@ -403,6 +494,124 @@ export default function ProcessesComponent() {
         centered
       >
         <pre>{html}</pre>
+      </Modal>
+
+      <Modal
+        open={showProcessesForm}
+        title={
+          processesForm.getFieldValue('id') === undefined
+            ? intl.formatMessage({
+                id: 'key0041',
+                defaultMessage: '新建服务',
+              })
+            : intl.formatMessage({
+                id: 'key0028',
+                defaultMessage: '编辑服务',
+              })
+        }
+        okButtonProps={{ autoFocus: true, htmlType: 'submit' }}
+        onCancel={() => setShowProcessesForm(false)}
+        destroyOnClose
+        modalRender={(dom) => (
+          <Form
+            layout="vertical"
+            form={processesForm}
+            name="form_in_modal"
+            onFinish={(values) => {
+              const id = processesForm.getFieldValue('id');
+
+              jsonFetcher(processesApiBase, id !== undefined ? 'PUT' : 'POST', {
+                ...values,
+                id,
+                projectId: processesForm.getFieldValue('projectId'),
+              }).then(() => {
+                message.success(
+                  intl.formatMessage({
+                    id: 'key0037',
+                    defaultMessage: '操作成功',
+                  }),
+                );
+                refreshProcesses();
+                setShowProcessesForm(false);
+              });
+            }}
+          >
+            {dom}
+          </Form>
+        )}
+      >
+        <Form.Item
+          name="path"
+          label="路径"
+          normalize={(v) => v?.trim()?.replace(/[\\/]+/g, '/')}
+          rules={[
+            {
+              required: true,
+              message: '路径不能为空',
+            },
+          ]}
+        >
+          <AutoComplete
+            options={
+              paths?.map((p) => ({
+                label: p,
+                value: p,
+              })) ?? []
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          name="command"
+          label={intl.formatMessage({
+            id: 'key0021',
+            defaultMessage: '命令',
+          })}
+          rules={[
+            {
+              required: true,
+              message: intl.formatMessage({
+                id: 'key0042',
+                defaultMessage: '命令不能为空',
+              }),
+            },
+          ]}
+        >
+          <AutoComplete
+            options={
+              pkgJson
+                ? Object.keys(safeParse(pkgJson).scripts ?? {}).reduce(
+                    (commands, command) => {
+                      commands.push({
+                        label: command,
+                        value: `npm run ${command}`,
+                      });
+                      return commands;
+                    },
+                    [] as DefaultOptionType[],
+                  )
+                : []
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          name="description"
+          label={intl.formatMessage({
+            id: 'key0040',
+            defaultMessage: '名称或描述',
+          })}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item name="appProcessStatusIds" label="日志状态配置">
+          <Select
+            mode="multiple"
+            options={logStatuses?.map((status) => ({
+              label: <span style={{ color: status.color }}>{status.name}</span>,
+              value: status.id,
+            }))}
+          ></Select>
+        </Form.Item>
       </Modal>
     </div>
   );

@@ -1,11 +1,12 @@
 package com.cs.home.appProcesses;
 
+import com.cs.home.common.Directory;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
-import java.util.Set;
 
 @Data
 public class AppProcessUpdated {
@@ -19,10 +20,12 @@ public class AppProcessUpdated {
     private Integer id;
 
     @NotNull
-    private Integer projectId;
+    @Directory
+    private String path;
 
     private Integer port;
 
-    private Set<Integer> appProcessStatusIds = new HashSet<>();
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    private HashSet<Integer> appProcessStatusIds = new HashSet<>();
 
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.Set;
 
 @Data
 public class AppProcessStatusUpdated {
@@ -12,12 +13,17 @@ public class AppProcessStatusUpdated {
     private Integer id;
 
     @NotEmpty
-    private String matcher;
+    private Set<String> matchers;
 
     @NotEmpty
-    private String name;
+    private String label;
 
     @NotEmpty
     private String color;
+
+    private Boolean clear = false;
+
+    @NotEmpty
+    private String name;
 
 }

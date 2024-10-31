@@ -1,32 +1,39 @@
 package com.cs.home.appProcessStatus;
 
-import com.cs.home.appProcesses.AppProcess;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @Valid
+
+@EqualsAndHashCode
 public class AppProcessStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
     @NotEmpty
-    private String matcher;
+    @ElementCollection
+    private Set<String> matchers;
 
     @NotEmpty
+    private String label;
+
+    @NotEmpty
+    @Column(unique = true)
     private String name;
 
     @NotEmpty
     private String color;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private AppProcess appProcess;
+    private Boolean clear;
 
 }

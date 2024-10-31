@@ -1,9 +1,9 @@
 package com.cs.home.appProcesses;
 
 import com.cs.home.appProcessStatus.AppProcessStatus;
+import com.cs.home.appProcessStatus.AppProcessStatusMapper;
 import com.cs.home.appProcessStatus.AppProcessStatusRepository;
-import com.cs.home.projects.Project;
-import com.cs.home.projects.ProjectsRepository;
+import com.cs.home.appProcessStatus.AppProcessStatusResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -33,11 +33,11 @@ public class AppProcessServiceImpl implements AppProcessService {
 
     private final AppProcessRepository appProcessRepository;
 
-    private final ProjectsRepository projectsRepository;
-
     private final AppProcessStatusRepository appProcessStatusRepository;
 
     private final AppProcessMapper appProcessMapper;
+    private final AppProcessStatusMapper appProcessStatusMapper;
+
     private final MessageSource messageSource;
 
 
@@ -57,23 +57,23 @@ public class AppProcessServiceImpl implements AppProcessService {
 
     public void start(Integer appProcessId) throws IOException {
 
-        if (idMapProcess.containsKey(appProcessId) && idMapProcess.get(appProcessId).getProcess().isAlive()) {
-            return;
-        }
 
         File log = new File(getLogPath(appProcessId));
         AppProcess appProcess = appProcessRepository.getReferenceById(appProcessId);
 
         RunningProcess rp;
-        if (!idMapProcess.containsKey(appProcessId)) {
-            rp = new RunningProcess(appProcess.getCommand().split(" "),
-                    appProcess.getProject().getPath(), log);
-        } else {
-            rp = idMapProcess.get(appProcessId);
-            rp.start(appProcess.getCommand().split(" "),
-                    appProcess.getProject().getPath(), log);
-        }
+        rp = new RunningProcess(appProcess.getCommand().split(" "),
+                appProcess.getPath(), log,
+                appProcessStatusMapper.map(appProcess.getAppProcessStatuses())
+        );
+        rp.setAppProcessId(appProcessId);
 
+        rp.setRunning(true);
+        rp.setLabel("");
+        rp.setColor("");
+        if (idMapProcess.containsKey(appProcessId)) {
+            idMapProcess.get(appProcessId).destory();
+        }
         idMapProcess.put(appProcessId, rp);
     }
 
@@ -87,7 +87,7 @@ public class AppProcessServiceImpl implements AppProcessService {
         RunningProcess runningProcess = idMapProcess.get(appProcessId);
         runningProcess.getProcess().descendants().forEach(ProcessHandle::destroy);
         runningProcess.getProcess().destroy();
-        runningProcess.setStatus("CLOSED");
+        runningProcess.setRunning(false);
     }
 
     @Override
@@ -108,8 +108,6 @@ public class AppProcessServiceImpl implements AppProcessService {
         }
 
 
-        valid(appProcessCreated.getProjectId());
-        appProcess.setProject(projectsRepository.getReferenceById(appProcessCreated.getProjectId()));
         return appProcessMapper.map(appProcessRepository.save(appProcess));
     }
 
@@ -125,11 +123,6 @@ public class AppProcessServiceImpl implements AppProcessService {
                     locale));
         }
 
-
-        Integer projectId = appProcessUpdated.getProjectId();
-        valid(projectId);
-
-
         AppProcess appProcess = appProcessMapper.map(appProcessUpdated);
 
         for (Integer appProcessStatusId : appProcessUpdated.getAppProcessStatusIds()) {
@@ -138,23 +131,9 @@ public class AppProcessServiceImpl implements AppProcessService {
             appProcess.add(appProcessStatus);
         }
 
-        Project project =
-                projectsRepository.getReferenceById(projectId);
-
-        appProcess.setProject(project);
-
         return appProcessMapper.map(appProcessRepository.save(appProcess));
     }
 
-    private void valid(Integer projectId) {
-        Locale locale = LocaleContextHolder.getLocale();
-        if (!projectsRepository.existsById(projectId)) {
-            throw new IllegalArgumentException(messageSource.getMessage("projectIdNotExist"
-                    , new Integer[]{projectId},
-                    locale));
-        }
-
-    }
 
     @Override
     @Transactional
@@ -176,57 +155,54 @@ public class AppProcessServiceImpl implements AppProcessService {
 
     @Override
     public String logs(Integer appProcessId) throws IOException {
-        if (idMapProcess.containsKey(appProcessId)) {
-            return Files.readString(Paths.get(getLogPath(appProcessId)));
-        }
-        return "";
+        return Files.readString(Paths.get(getLogPath(appProcessId)));
     }
 
     public synchronized Map<Integer, RunningProcessResponse> runningProcesses() throws IOException {
-
-
         for (Map.Entry<Integer, RunningProcess> numberProcessInfoEntry :
                 idMapProcess.entrySet()) {
             Integer appProcessId = numberProcessInfoEntry.getKey();
             RunningProcess runningProcess = numberProcessInfoEntry.getValue();
-            boolean needCleanLog = false;
+            Boolean needCleanLog = false;
 
-            if (!runningProcess.getProcess().isAlive()) {
-                stop(appProcessId);
-                continue;
-            }
+
             String strLine;
 
             StringBuilder newStr = new StringBuilder();
             while ((strLine = runningProcess.getBr().readLine()) != null) {
                 newStr.append(strLine);
-                if (strLine.contains("Compiling ")) {
-                    newStr = new StringBuilder(strLine);
-                    runningProcess.setStatus("COMPILING");
-                    needCleanLog = true;
-                    continue;
-                }
-
-                Pattern pattern = Pattern.compile("\\berr(or)?\\b",
-                        Pattern.CASE_INSENSITIVE);
-                Matcher matcher = pattern.matcher(strLine);
-                if (matcher.find()) {
-                    runningProcess.setStatus("ERROR");
-                    continue;
-                }
-
-
-                if (strLine.contains(" result: 200 200") || strLine.contains("api server started at") || strLine.contains(" message: 'start at ")) {
-                    runningProcess.setStatus("SUCCESS");
+                for (AppProcessStatusResponse status :
+                        runningProcess.getAppProcessStatuses()) {
+                    for (String matcherStr : status.getMatchers()) {
+                        Pattern pattern =
+                                Pattern.compile("\\b" + matcherStr + "\\b",
+                                        Pattern.CASE_INSENSITIVE);
+                        Matcher matcher = pattern.matcher(strLine);
+                        if (matcher.find()) {
+                            runningProcess.setLabel(status.getLabel());
+                            runningProcess.setColor(status.getColor());
+                            needCleanLog = status.getClear();
+                        }
+                    }
                 }
             }
 
-            if (needCleanLog) {
+            if (needCleanLog != null && needCleanLog) {
                 Files.writeString(Paths.get(getLogPath(appProcessId)), newStr);
             }
 
+            if (!runningProcess.getProcess().isAlive()) {
+                stop(appProcessId);
+            }
         }
         return appProcessMapper.map(idMapProcess);
+    }
+
+    @Override
+    public List<String> paths() {
+        List<AppProcess> appProcesses = appProcessRepository.findAll();
+        return appProcesses.stream().map(
+                AppProcess::getPath).distinct().toList();
     }
 
     @Override

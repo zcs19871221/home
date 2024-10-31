@@ -1,10 +1,10 @@
 package com.cs.home.appProcesses;
 
 import com.cs.home.appProcessStatus.AppProcessStatusResponse;
-import com.cs.home.projects.ProjectResponse;
 import lombok.Data;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Data
@@ -15,10 +15,8 @@ public class AppProcessResponse {
 
     private String description;
 
-    private ProjectResponse project;
+    private String path;
 
-    private Integer port;
-
-    private List<AppProcessStatusResponse> appProcessStatusResponses;
-
+    private Set<AppProcessStatusResponse> appProcessStatuses =
+            new HashSet<>();
 }

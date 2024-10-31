@@ -68,6 +68,12 @@ public class AppProcessController {
         return appProcessService.logs(processId);
     }
 
+    @GetMapping("/paths")
+    @ResponseBody
+    Response<List<String>> paths() throws Exception {
+        return Response.create(appProcessService.paths());
+    }
+
 
     @DeleteMapping("/{processId}/logs")
     Response<String> clearLog(@PathVariable Integer processId) throws Exception {

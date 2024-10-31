@@ -25,4 +25,5 @@ public interface AppProcessService {
 
     Map<Integer, RunningProcessResponse> runningProcesses() throws IOException;
 
+    List<String> paths();
 }

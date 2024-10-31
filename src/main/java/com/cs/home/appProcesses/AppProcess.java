@@ -1,7 +1,7 @@
 package com.cs.home.appProcesses;
 
 import com.cs.home.appProcessStatus.AppProcessStatus;
-import com.cs.home.projects.Project;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,32 +15,31 @@ import java.util.Set;
 @Getter
 @Setter
 @Valid
+@EqualsAndHashCode
 public class AppProcess {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
-    private Integer port;
-
     @NotEmpty
     private String command;
 
+    @NotEmpty
+    private String path;
+
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Project project;
-
-    @OneToMany(mappedBy = "appProcess", cascade = CascadeType.ALL,
-            orphanRemoval =
-                    true)
-    private Set<AppProcessStatus> appProcessStatuses;
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+    private Set<AppProcessStatus> appProcessStatuses = new HashSet<>();
 
     public void add(AppProcessStatus appProcessStatus) {
-        if (appProcessStatuses == null) {
-            setAppProcessStatuses(new HashSet<>());
+        if (appProcessStatus == null) {
+            return;
         }
         appProcessStatuses.add(appProcessStatus);
-        appProcessStatus.setAppProcess(this);
     }
 
     public void remove(AppProcessStatus appProcessStatus) {
@@ -48,8 +47,6 @@ public class AppProcess {
         if (appProcessStatus == null) {
             return;
         }
-        appProcessStatus.setAppProcess(null);
-
         appProcessStatuses.remove(appProcessStatus);
     }
 

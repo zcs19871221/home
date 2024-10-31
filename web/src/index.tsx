@@ -1,6 +1,6 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ConfigProvider, Layout, Menu, message, Select } from 'antd';
-import { ProjectOutlined, CloudServerOutlined } from '@ant-design/icons';
+import { CloudServerOutlined } from '@ant-design/icons';
 import React, { Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SWRConfig } from 'swr';
@@ -11,6 +11,7 @@ import { Content, Header } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
 import { jsonFetcher } from './common/fetcher.tsx';
 import { LocaleProvider, useLocale } from './i18n/index.tsx';
+import LogStatus from './logStatus/index.tsx';
 
 export type AvailableLocale = 'zh-CN' | 'en-US';
 
@@ -18,8 +19,6 @@ const { Option } = Select;
 
 const fetcher = (url: string) =>
   fetch(url).then((r) => r.json().then((d) => d.data));
-
-const Project = lazy(() => import('./projects/index.tsx'));
 
 const Processes = lazy(() => import('./processes/index.tsx'));
 
@@ -85,19 +84,16 @@ export const App = () => {
                 }}
                 items={[
                   {
-                    key: 'project',
-                    label: intl.formatMessage({
-                      id: 'key0005',
-                      defaultMessage: '项目',
-                    }),
-                    icon: <ProjectOutlined />,
-                  },
-                  {
-                    key: 'server',
+                    key: 'processes',
                     label: intl.formatMessage({
                       id: 'key0006',
                       defaultMessage: '服务',
                     }),
+                    icon: <CloudServerOutlined />,
+                  },
+                  {
+                    key: 'logStatus',
+                    label: '日志状态',
                     icon: <CloudServerOutlined />,
                   },
                 ]}
@@ -108,8 +104,8 @@ export const App = () => {
                 <Suspense fallback={<div>loading</div>}>
                   <div className="ml-4 mr-4">
                     <Routes>
-                      <Route path="/project" element={<Project />} />
-                      <Route path="/server" element={<Processes />} />
+                      <Route path="/processes" element={<Processes />} />
+                      <Route path="/logStatus" element={<LogStatus />} />
                     </Routes>
                   </div>
                 </Suspense>

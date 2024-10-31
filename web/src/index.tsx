@@ -63,7 +63,7 @@ export const App = () => {
                     intl.formatMessage({
                       id: 'key0003',
                       defaultMessage: '后台服务关闭成功',
-                    }),
+                    })
                   );
                 });
               }}
@@ -72,7 +72,9 @@ export const App = () => {
             </div>
             <Select onChange={setLocale} value={locale} className="ml-5 w-28">
               <Option value="en-us">English</Option>
-              <Option value="zh-cn">中文</Option>
+              <Option value="zh-cn">
+                <FormattedMessage id="key0044" defaultMessage="中文" />
+              </Option>
             </Select>
           </Header>
           <Layout>
@@ -93,7 +95,10 @@ export const App = () => {
                   },
                   {
                     key: 'logStatus',
-                    label: '日志状态',
+                    label: intl.formatMessage({
+                      id: 'key0045',
+                      defaultMessage: '日志状态',
+                    }),
                     icon: <CloudServerOutlined />,
                   },
                 ]}
@@ -126,5 +131,5 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </LocaleProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

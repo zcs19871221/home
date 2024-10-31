@@ -44,7 +44,7 @@ import {
 import { i18n } from '../i18n/index.tsx';
 import useDebouncedValue from '../common/useDebouncedValue.tsx';
 import safeParse from '../common/safeParse.ts';
-import { statusColumns } from '../logStatus/index.tsx';
+import { useStatusColumns } from '../logStatus/index.tsx';
 import { StatusResponse, statusApiBase } from '../logStatus/types.ts';
 
 const operator = (type: 'start' | 'stop' | 'restart', processesId: number) =>
@@ -53,10 +53,13 @@ const operator = (type: 'start' | 'stop' | 'restart', processesId: number) =>
       i18n.intl.formatMessage(
         {
           id: 'key0007',
-          defaultMessage: '{v1}指令已发送',
+          defaultMessage: i18n.intl.formatMessage({
+            id: 'key0007',
+            defaultMessage: '{v1}指令已发送',
+          }),
         },
-        { v1: type },
-      ),
+        { v1: type }
+      )
     );
   });
 
@@ -91,7 +94,15 @@ const Status = ({
           className="flex align-middle cursor-pointer"
           onClick={onClick}
         >
-          {logInfo?.running ? '运行中' : '未运行'}
+          {logInfo?.running
+            ? intl.formatMessage({
+                id: 'key0060',
+                defaultMessage: '运行中',
+              })
+            : intl.formatMessage({
+                id: 'key0061',
+                defaultMessage: '未运行',
+              })}
         </Tag>
         <Tag
           bordered={false}
@@ -180,7 +191,7 @@ const Status = ({
             onClick={() => {
               jsonFetcher(
                 `${processesApiBase}/${processesId}/logs`,
-                'DELETE',
+                'DELETE'
               ).then(() => refetchLog());
             }}
           >
@@ -197,8 +208,10 @@ const Status = ({
             type="text"
             onClick={() => {
               jsonFetcher(
-                `/system/run?command=${encodeURIComponent(`code.cmd ${process?.path}`)}`,
-                'GET',
+                `/system/run?command=${encodeURIComponent(
+                  `code.cmd ${process?.path}`
+                )}`,
+                'GET'
               );
             }}
           >
@@ -240,7 +253,7 @@ export default function ProcessesComponent() {
           revalidateOnMount: true,
           revalidateOnReconnect: true,
         }
-      : {},
+      : {}
   );
 
   const [html, errorAnchorIds] = useMemo(() => {
@@ -260,7 +273,7 @@ export default function ProcessesComponent() {
           htmlParts.push(
             <span id={idKey} className="text-red-500" key={idKey}>
               {errorText}
-            </span>,
+            </span>
           );
           return _match;
         }
@@ -271,19 +284,19 @@ export default function ProcessesComponent() {
               onClick={() => {
                 jsonFetcher(
                   `/system/run?command=${encodeURIComponent(
-                    `code.cmd ${locate}:${row}:${col}`,
+                    `code.cmd ${locate}:${row}:${col}`
                   )}`,
-                  'GET',
+                  'GET'
                 );
               }}
               target="_blank"
             >
               {_match}
             </Button>
-          </h3>,
+          </h3>
         );
         return _match;
-      },
+      }
     );
 
     if (log) {
@@ -317,11 +330,12 @@ export default function ProcessesComponent() {
     path
       ? `${base}/system/read?path=${encodeURIComponent(`${path}/package.json`)}`
       : undefined,
-    bufferFetcher,
+    bufferFetcher
   );
 
   const { data: logStatuses } = useAppSwr<StatusResponse[]>(statusApiBase);
 
+  const statusColumns = useStatusColumns();
   const expandedRowRender = (record: Process) => (
     <Table
       rowKey="id"
@@ -339,7 +353,13 @@ export default function ProcessesComponent() {
         <h2 className="mr-auto">
           <FormattedMessage id="key0019" defaultMessage="服务管理" />
         </h2>
-        <Tooltip title="添加服务" placement="leftBottom">
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0062',
+            defaultMessage: '添加服务',
+          })}
+          placement="leftBottom"
+        >
           <Button
             type="text"
             onClick={() => {
@@ -420,13 +440,13 @@ export default function ProcessesComponent() {
                         onOk() {
                           jsonFetcher(
                             `${processesApiBase}/${processesRecord.id}`,
-                            'DELETE',
+                            'DELETE'
                           ).then(() => {
                             message.success(
                               i18n.intl.formatMessage({
                                 id: 'key0027',
                                 defaultMessage: '删除成功',
-                              }),
+                              })
                             );
                             refreshProcesses();
                           });
@@ -529,7 +549,7 @@ export default function ProcessesComponent() {
                   intl.formatMessage({
                     id: 'key0037',
                     defaultMessage: '操作成功',
-                  }),
+                  })
                 );
                 refreshProcesses();
                 setShowProcessesForm(false);
@@ -542,12 +562,18 @@ export default function ProcessesComponent() {
       >
         <Form.Item
           name="path"
-          label="路径"
+          label={intl.formatMessage({
+            id: 'key0063',
+            defaultMessage: '路径',
+          })}
           normalize={(v) => v?.trim()?.replace(/[\\/]+/g, '/')}
           rules={[
             {
               required: true,
-              message: '路径不能为空',
+              message: intl.formatMessage({
+                id: 'key0064',
+                defaultMessage: '路径不能为空',
+              }),
             },
           ]}
         >
@@ -587,7 +613,7 @@ export default function ProcessesComponent() {
                       });
                       return commands;
                     },
-                    [] as DefaultOptionType[],
+                    [] as DefaultOptionType[]
                   )
                 : []
             }
@@ -603,7 +629,13 @@ export default function ProcessesComponent() {
           <Input />
         </Form.Item>
 
-        <Form.Item name="appProcessStatusIds" label="日志状态配置">
+        <Form.Item
+          name="appProcessStatusIds"
+          label={intl.formatMessage({
+            id: 'key0065',
+            defaultMessage: '日志状态配置',
+          })}
+        >
           <Select
             mode="multiple"
             options={logStatuses?.map((status) => ({

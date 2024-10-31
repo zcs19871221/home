@@ -1,4 +1,4 @@
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import {
   Button,
   Checkbox,
@@ -27,22 +27,32 @@ import {
   StatusCreatedOrUpdated,
   StatusResponse,
 } from './types.ts';
+import { i18n } from '../i18n/index.tsx';
 
-export const statusColumns = [
+export const useStatusColumns = () => [
   {
     dataIndex: 'name',
-    title: '日志状态名称',
+    title: i18n.intl.formatMessage({
+      id: 'key0046',
+      defaultMessage: '日志状态名称',
+    }),
   },
   {
     dataIndex: 'label',
-    title: '日志状态标签',
+    title: i18n.intl.formatMessage({
+      id: 'key0047',
+      defaultMessage: '日志状态标签',
+    }),
     render: (label: string, r: StatusResponse) => (
       <span style={{ color: r.color }}>{label}</span>
     ),
   },
   {
     dataIndex: 'matchers',
-    title: '日志状态匹配规则',
+    title: i18n.intl.formatMessage({
+      id: 'key0048',
+      defaultMessage: '日志状态匹配规则',
+    }),
     render: (matchers: string[]) => (
       <>
         {matchers.map((matcher) => (
@@ -53,8 +63,20 @@ export const statusColumns = [
   },
   {
     dataIndex: 'clear',
-    title: '当前状态是否清除之前日志',
-    render: (val: boolean) => (val ? '清除日志' : '不清除日志'),
+    title: i18n.intl.formatMessage({
+      id: 'key0049',
+      defaultMessage: '当前状态是否清除之前日志',
+    }),
+    render: (val: boolean) =>
+      val
+        ? i18n.intl.formatMessage({
+            id: 'key0018',
+            defaultMessage: '清除日志',
+          })
+        : i18n.intl.formatMessage({
+            id: 'key0050',
+            defaultMessage: '不清除日志',
+          }),
   },
 ];
 export default function LogStatus() {
@@ -67,11 +89,20 @@ export default function LogStatus() {
 
   const [showForm, setShowForm] = useState(false);
 
+  const columns = useStatusColumns();
   return (
     <div>
       <div className="flex justify-center items-center h-8 ">
-        <h2 className="mr-auto">日志状态管理</h2>
-        <Tooltip title="增加日志状态" placement="leftBottom">
+        <h2 className="mr-auto">
+          <FormattedMessage id="key0051" defaultMessage="日志状态管理" />
+        </h2>
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'key0052',
+            defaultMessage: '增加日志状态',
+          })}
+          placement="leftBottom"
+        >
           <FileAddOutlined
             onClick={() => {
               form.resetFields();
@@ -87,7 +118,7 @@ export default function LogStatus() {
           loading={isLoading}
           pagination={false}
           columns={[
-            ...statusColumns,
+            ...columns,
             {
               title: intl.formatMessage({
                 id: 'key0024',
@@ -108,7 +139,12 @@ export default function LogStatus() {
                       }}
                     />
                   </Tooltip>
-                  <Tooltip title="删除日志状态配置">
+                  <Tooltip
+                    title={intl.formatMessage({
+                      id: 'key0053',
+                      defaultMessage: '删除日志状态配置',
+                    })}
+                  >
                     <DeleteOutlined
                       onClick={() => {
                         Modal.confirm({
@@ -120,13 +156,13 @@ export default function LogStatus() {
                           onOk() {
                             jsonFetcher(
                               `${statusApiBase}/${row.id}`,
-                              'DELETE',
+                              'DELETE'
                             ).then(() => {
                               message.success(
                                 intl.formatMessage({
                                   id: 'key0027',
                                   defaultMessage: '删除成功',
-                                }),
+                                })
                               );
                               mutate();
                             });
@@ -172,7 +208,7 @@ export default function LogStatus() {
                   intl.formatMessage({
                     id: 'key0037',
                     defaultMessage: '操作成功',
-                  }),
+                  })
                 );
                 setShowForm(false);
                 mutate();
@@ -185,7 +221,10 @@ export default function LogStatus() {
       >
         <Form.Item
           name="matchers"
-          label="匹配规则"
+          label={intl.formatMessage({
+            id: 'key0054',
+            defaultMessage: '匹配规则',
+          })}
           rules={[
             {
               required: true,
@@ -199,7 +238,14 @@ export default function LogStatus() {
                   new RegExp(value);
                   return Promise.resolve();
                 } catch {
-                  return Promise.reject(new Error('不是有效的正则表达式'));
+                  return Promise.reject(
+                    new Error(
+                      intl.formatMessage({
+                        id: 'key0055',
+                        defaultMessage: '不是有效的正则表达式',
+                      })
+                    )
+                  );
                 }
               },
             },
@@ -229,22 +275,40 @@ export default function LogStatus() {
             )}
           </Form.List>
         </Form.Item>
-        <Form.Item name="name" label="名称">
+        <Form.Item
+          name="name"
+          label={intl.formatMessage({
+            id: 'key0056',
+            defaultMessage: '名称',
+          })}
+        >
           <Input />
         </Form.Item>
-        <Form.Item name="label" label="标签名">
+        <Form.Item
+          name="label"
+          label={intl.formatMessage({
+            id: 'key0057',
+            defaultMessage: '标签名',
+          })}
+        >
           <Input />
         </Form.Item>
         <Form.Item
           name="color"
-          label="标签颜色"
+          label={intl.formatMessage({
+            id: 'key0058',
+            defaultMessage: '标签颜色',
+          })}
           getValueFromEvent={(color: Color) => color.toHexString()}
         >
           <ColorPicker />
         </Form.Item>
         <Form.Item
           name="clear"
-          label="是否清除之前日志"
+          label={intl.formatMessage({
+            id: 'key0059',
+            defaultMessage: '是否清除之前日志',
+          })}
           valuePropName="checked"
         >
           <Checkbox />

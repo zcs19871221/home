@@ -53,7 +53,10 @@ export const App = () => {
         <Layout style={{ minHeight: '100vh' }}>
           <Header className="text-white flex items-center">
             <div>
-              <FormattedMessage id="key0002" defaultMessage="前端管理系统" />
+              <FormattedMessage
+                id="FrontendManagementSystem"
+                defaultMessage="前端管理系统"
+              />
             </div>
             <div
               className="ml-auto cursor-pointer"
@@ -61,19 +64,19 @@ export const App = () => {
                 jsonFetcher('/system/shutdown', 'PUT').then(() => {
                   message.success(
                     intl.formatMessage({
-                      id: 'key0003',
+                      id: 'BackendServiceClosedSuccessful_',
                       defaultMessage: '后台服务关闭成功',
                     })
                   );
                 });
               }}
             >
-              <FormattedMessage id="key0004" defaultMessage="关闭系统" />
+              <FormattedMessage id="ShutdownSystem" defaultMessage="关闭系统" />
             </div>
             <Select onChange={setLocale} value={locale} className="ml-5 w-28">
               <Option value="en-us">English</Option>
               <Option value="zh-cn">
-                <FormattedMessage id="key0044" defaultMessage="中文" />
+                <FormattedMessage id="Chinese" defaultMessage="中文" />
               </Option>
             </Select>
           </Header>
@@ -88,7 +91,7 @@ export const App = () => {
                   {
                     key: 'processes',
                     label: intl.formatMessage({
-                      id: 'key0006',
+                      id: 'Service',
                       defaultMessage: '服务',
                     }),
                     icon: <CloudServerOutlined />,
@@ -96,7 +99,7 @@ export const App = () => {
                   {
                     key: 'logStatus',
                     label: intl.formatMessage({
-                      id: 'key0045',
+                      id: 'LogStatus',
                       defaultMessage: '日志状态',
                     }),
                     icon: <CloudServerOutlined />,

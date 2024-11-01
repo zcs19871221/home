@@ -36,14 +36,14 @@ export const useStatusColumns = () => [
   {
     dataIndex: 'name',
     title: i18n.intl.formatMessage({
-      id: 'key0046',
+      id: 'LogStatusName',
       defaultMessage: '日志状态名称',
     }),
   },
   {
     dataIndex: 'label',
     title: i18n.intl.formatMessage({
-      id: 'key0047',
+      id: 'LogStatusLabel',
       defaultMessage: '日志状态标签',
     }),
     render: (label: string, r: StatusResponse) => (
@@ -53,7 +53,7 @@ export const useStatusColumns = () => [
   {
     dataIndex: 'matchers',
     title: i18n.intl.formatMessage({
-      id: 'key0048',
+      id: 'LogStatusMatchingRule',
       defaultMessage: '日志状态匹配规则',
     }),
     render: (matchers: string[]) => (
@@ -67,17 +67,17 @@ export const useStatusColumns = () => [
   {
     dataIndex: 'clear',
     title: i18n.intl.formatMessage({
-      id: 'key0049',
+      id: 'WhetherToClearThePreviousLogIn_',
       defaultMessage: '当前状态是否清除之前日志',
     }),
     render: (val: boolean) =>
       val
         ? i18n.intl.formatMessage({
-            id: 'key0018',
+            id: 'ClearLog',
             defaultMessage: '清除日志',
           })
         : i18n.intl.formatMessage({
-            id: 'key0050',
+            id: 'DoNotClearTheLog',
             defaultMessage: '不清除日志',
           }),
   },
@@ -114,11 +114,14 @@ export default function LogStatus() {
     <div>
       <div className="flex justify-center items-center h-8 ">
         <h2 className="mr-auto">
-          <FormattedMessage id="key0051" defaultMessage="日志状态管理" />
+          <FormattedMessage
+            id="LogStatusManagement"
+            defaultMessage="日志状态管理"
+          />
         </h2>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0052',
+            id: 'AddLogStatus',
             defaultMessage: '增加日志状态',
           })}
           placement="leftBottom"
@@ -141,14 +144,14 @@ export default function LogStatus() {
             ...columns,
             {
               title: intl.formatMessage({
-                id: 'key0024',
+                id: 'Operation',
                 defaultMessage: '操作',
               }),
               render: (_, row) => (
                 <div className="space-x-5">
                   <Tooltip
                     title={intl.formatMessage({
-                      id: 'key0032',
+                      id: 'EditProject',
                       defaultMessage: '编辑项目',
                     })}
                   >
@@ -161,7 +164,7 @@ export default function LogStatus() {
                   </Tooltip>
                   <Tooltip
                     title={intl.formatMessage({
-                      id: 'key0053',
+                      id: 'DeleteLogStatusConfiguration',
                       defaultMessage: '删除日志状态配置',
                     })}
                   >
@@ -169,20 +172,20 @@ export default function LogStatus() {
                       onClick={() => {
                         Modal.confirm({
                           title: intl.formatMessage({
-                            id: 'key0034',
+                            id: 'DoYouWantToDeleteTheProject',
                             defaultMessage: '是否删除?',
                           }),
                           icon: <ExclamationCircleFilled />,
                           onOk() {
                             jsonFetcher(
                               `${statusApiBase}/${row.id}`,
-                              'DELETE',
+                              'DELETE'
                             ).then(() => {
                               message.success(
                                 intl.formatMessage({
-                                  id: 'key0027',
+                                  id: 'DeletedSuccessfully',
                                   defaultMessage: '删除成功',
-                                }),
+                                })
                               );
                               mutate();
                             });
@@ -202,11 +205,11 @@ export default function LogStatus() {
         title={
           form.getFieldValue('id') === undefined
             ? intl.formatMessage({
-                id: 'key0036',
+                id: 'CreateANewProject',
                 defaultMessage: '新建项目',
               })
             : intl.formatMessage({
-                id: 'key0032',
+                id: 'EditProject',
                 defaultMessage: '编辑项目',
               })
         }
@@ -226,9 +229,9 @@ export default function LogStatus() {
               }).then(() => {
                 message.success(
                   intl.formatMessage({
-                    id: 'key0037',
+                    id: 'OperationSuccessful',
                     defaultMessage: '操作成功',
-                  }),
+                  })
                 );
                 setShowForm(false);
                 mutate();
@@ -242,14 +245,14 @@ export default function LogStatus() {
         <Form.Item
           name="matchers"
           label={intl.formatMessage({
-            id: 'key0054',
+            id: 'MatchingRule',
             defaultMessage: '匹配规则',
           })}
           rules={[
             {
               required: true,
               message: intl.formatMessage({
-                id: 'key0039',
+                id: 'FolderAddressCannotBeEmpty',
                 defaultMessage: '文件夹地址不能为空',
               }),
               validator: (_, value) => {
@@ -261,10 +264,10 @@ export default function LogStatus() {
                   return Promise.reject(
                     new Error(
                       intl.formatMessage({
-                        id: 'key0055',
+                        id: 'NotAValidRegularExpression',
                         defaultMessage: '不是有效的正则表达式',
-                      }),
-                    ),
+                      })
+                    )
                   );
                 }
               },
@@ -298,7 +301,7 @@ export default function LogStatus() {
         <Form.Item
           name="name"
           label={intl.formatMessage({
-            id: 'key0056',
+            id: 'Name',
             defaultMessage: '名称',
           })}
         >
@@ -307,7 +310,7 @@ export default function LogStatus() {
         <Form.Item
           name="label"
           label={intl.formatMessage({
-            id: 'key0057',
+            id: 'LabelName',
             defaultMessage: '标签名',
           })}
         >
@@ -316,7 +319,7 @@ export default function LogStatus() {
         <Form.Item
           name="color"
           label={intl.formatMessage({
-            id: 'key0058',
+            id: 'LabelColor',
             defaultMessage: '标签颜色',
           })}
           getValueFromEvent={(color: Color) => color.toHexString()}
@@ -326,7 +329,7 @@ export default function LogStatus() {
         <Form.Item
           name="clear"
           label={intl.formatMessage({
-            id: 'key0059',
+            id: 'WhetherToClearThePreviousLog',
             defaultMessage: '是否清除之前日志',
           })}
           valuePropName="checked"

@@ -52,9 +52,9 @@ const operator = (type: 'start' | 'stop' | 'restart', processesId: number) =>
     message.success(
       i18n.intl.formatMessage(
         {
-          id: 'key0007',
+          id: 'vCommandHasBeenSent',
           defaultMessage: i18n.intl.formatMessage({
-            id: 'key0007',
+            id: 'vCommandHasBeenSent',
             defaultMessage: '{v1}指令已发送',
           }),
         },
@@ -96,11 +96,11 @@ const Status = ({
         >
           {logInfo?.running
             ? intl.formatMessage({
-                id: 'key0060',
+                id: 'Running',
                 defaultMessage: '运行中',
               })
             : intl.formatMessage({
-                id: 'key0061',
+                id: 'NotRunning',
                 defaultMessage: '未运行',
               })}
         </Tag>
@@ -116,7 +116,7 @@ const Status = ({
       <div className="text-grey mt-2">
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0014',
+            id: 'StartService',
             defaultMessage: '启动服务',
           })}
         >
@@ -133,7 +133,7 @@ const Status = ({
         </Tooltip>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0015',
+            id: 'StopService',
             defaultMessage: '关闭服务',
           })}
         >
@@ -150,7 +150,7 @@ const Status = ({
         </Tooltip>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0016',
+            id: 'RestartService',
             defaultMessage: '重启服务',
           })}
         >
@@ -167,7 +167,7 @@ const Status = ({
         </Tooltip>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0017',
+            id: 'ViewLog',
             defaultMessage: '查看日志',
           })}
         >
@@ -182,7 +182,7 @@ const Status = ({
         </Tooltip>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0018',
+            id: 'ClearLog',
             defaultMessage: '清除日志',
           })}
         >
@@ -200,7 +200,7 @@ const Status = ({
         </Tooltip>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0001',
+            id: 'OpenDirectory',
             defaultMessage: '打开目录',
           })}
         >
@@ -351,11 +351,11 @@ export default function ProcessesComponent() {
     <div>
       <div className="flex justify-center items-center h-8">
         <h2 className="mr-auto">
-          <FormattedMessage id="key0019" defaultMessage="服务管理" />
+          <FormattedMessage id="ServiceManagement" defaultMessage="服务管理" />
         </h2>
         <Tooltip
           title={intl.formatMessage({
-            id: 'key0062',
+            id: 'AddService',
             defaultMessage: '添加服务',
           })}
           placement="leftBottom"
@@ -380,7 +380,7 @@ export default function ProcessesComponent() {
         columns={[
           {
             title: intl.formatMessage({
-              id: 'key0020',
+              id: 'Description',
               defaultMessage: '描述',
             }),
             dataIndex: 'description',
@@ -403,7 +403,7 @@ export default function ProcessesComponent() {
           },
           {
             title: intl.formatMessage({
-              id: 'key0021',
+              id: 'Command',
               defaultMessage: '命令',
             }),
             dataIndex: 'command',
@@ -411,20 +411,20 @@ export default function ProcessesComponent() {
           {
             dataIndex: 'path',
             title: intl.formatMessage({
-              id: 'key0023',
+              id: 'Address',
               defaultMessage: '地址',
             }),
           },
           {
             title: i18n.intl.formatMessage({
-              id: 'key0024',
+              id: 'Operation',
               defaultMessage: '操作',
             }),
             render: (_, processesRecord: Process) => (
               <div>
                 <Tooltip
                   title={i18n.intl.formatMessage({
-                    id: 'key0025',
+                    id: 'DeleteService',
                     defaultMessage: '删除服务',
                   })}
                 >
@@ -433,7 +433,7 @@ export default function ProcessesComponent() {
                     onClick={() => {
                       Modal.confirm({
                         title: i18n.intl.formatMessage({
-                          id: 'key0026',
+                          id: 'DeleteService',
                           defaultMessage: '是否删除服务?',
                         }),
                         icon: <ExclamationCircleFilled />,
@@ -444,7 +444,7 @@ export default function ProcessesComponent() {
                           ).then(() => {
                             message.success(
                               i18n.intl.formatMessage({
-                                id: 'key0027',
+                                id: 'DeletedSuccessfully',
                                 defaultMessage: '删除成功',
                               })
                             );
@@ -459,7 +459,7 @@ export default function ProcessesComponent() {
                 </Tooltip>
                 <Tooltip
                   title={i18n.intl.formatMessage({
-                    id: 'key0028',
+                    id: 'EditService',
                     defaultMessage: '编辑服务',
                   })}
                 >
@@ -521,11 +521,11 @@ export default function ProcessesComponent() {
         title={
           processesForm.getFieldValue('id') === undefined
             ? intl.formatMessage({
-                id: 'key0041',
+                id: 'CreateANewService',
                 defaultMessage: '新建服务',
               })
             : intl.formatMessage({
-                id: 'key0028',
+                id: 'EditService',
                 defaultMessage: '编辑服务',
               })
         }
@@ -547,7 +547,7 @@ export default function ProcessesComponent() {
               }).then(() => {
                 message.success(
                   intl.formatMessage({
-                    id: 'key0037',
+                    id: 'OperationSuccessful',
                     defaultMessage: '操作成功',
                   })
                 );
@@ -563,7 +563,7 @@ export default function ProcessesComponent() {
         <Form.Item
           name="path"
           label={intl.formatMessage({
-            id: 'key0063',
+            id: 'Path',
             defaultMessage: '路径',
           })}
           normalize={(v) => v?.trim()?.replace(/[\\/]+/g, '/')}
@@ -571,7 +571,7 @@ export default function ProcessesComponent() {
             {
               required: true,
               message: intl.formatMessage({
-                id: 'key0064',
+                id: 'PathCannotBeEmpty',
                 defaultMessage: '路径不能为空',
               }),
             },
@@ -589,14 +589,14 @@ export default function ProcessesComponent() {
         <Form.Item
           name="command"
           label={intl.formatMessage({
-            id: 'key0021',
+            id: 'Command',
             defaultMessage: '命令',
           })}
           rules={[
             {
               required: true,
               message: intl.formatMessage({
-                id: 'key0042',
+                id: 'CommandCannotBeEmpty',
                 defaultMessage: '命令不能为空',
               }),
             },
@@ -622,7 +622,7 @@ export default function ProcessesComponent() {
         <Form.Item
           name="description"
           label={intl.formatMessage({
-            id: 'key0040',
+            id: 'NameOrDescription',
             defaultMessage: '名称或描述',
           })}
         >
@@ -632,7 +632,7 @@ export default function ProcessesComponent() {
         <Form.Item
           name="appProcessStatusIds"
           label={intl.formatMessage({
-            id: 'key0065',
+            id: 'LogStatusConfiguration',
             defaultMessage: '日志状态配置',
           })}
         >

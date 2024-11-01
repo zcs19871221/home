@@ -3,6 +3,7 @@ import {
   Button,
   Checkbox,
   ColorPicker,
+  ColorPickerProps,
   Form,
   Input,
   Modal,
@@ -10,7 +11,9 @@ import {
   Table,
   Tooltip,
   message,
+  theme,
 } from 'antd';
+import { generate, green, presetPalettes, red, blue } from '@ant-design/colors';
 import {
   EditOutlined,
   DeleteOutlined,
@@ -79,6 +82,8 @@ export const useStatusColumns = () => [
           }),
   },
 ];
+type Presets = Required<ColorPickerProps>['presets'][number];
+
 export default function LogStatus() {
   const intl = useIntl();
 
@@ -90,6 +95,21 @@ export default function LogStatus() {
   const [showForm, setShowForm] = useState(false);
 
   const columns = useStatusColumns();
+  const genPresets = (presets = presetPalettes) =>
+    Object.entries(presets).map<Presets>(([label, colors]) => ({
+      label,
+      colors,
+    }));
+
+  const { token } = theme.useToken();
+
+  const presets = genPresets({
+    primary: generate(token.colorPrimary),
+    red,
+    green,
+    blue,
+  });
+
   return (
     <div>
       <div className="flex justify-center items-center h-8 ">
@@ -156,13 +176,13 @@ export default function LogStatus() {
                           onOk() {
                             jsonFetcher(
                               `${statusApiBase}/${row.id}`,
-                              'DELETE'
+                              'DELETE',
                             ).then(() => {
                               message.success(
                                 intl.formatMessage({
                                   id: 'key0027',
                                   defaultMessage: '删除成功',
-                                })
+                                }),
                               );
                               mutate();
                             });
@@ -208,7 +228,7 @@ export default function LogStatus() {
                   intl.formatMessage({
                     id: 'key0037',
                     defaultMessage: '操作成功',
-                  })
+                  }),
                 );
                 setShowForm(false);
                 mutate();
@@ -243,8 +263,8 @@ export default function LogStatus() {
                       intl.formatMessage({
                         id: 'key0055',
                         defaultMessage: '不是有效的正则表达式',
-                      })
-                    )
+                      }),
+                    ),
                   );
                 }
               },
@@ -301,7 +321,7 @@ export default function LogStatus() {
           })}
           getValueFromEvent={(color: Color) => color.toHexString()}
         >
-          <ColorPicker />
+          <ColorPicker presets={presets} />
         </Form.Item>
         <Form.Item
           name="clear"

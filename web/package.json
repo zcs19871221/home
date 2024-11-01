@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "nvm use 20 && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "i18n": "i18n -t ./src -d ./src/i18n"
@@ -42,6 +42,7 @@
     }
   },
   "dependencies": {
+    "@ant-design/colors": "^7.1.0",
     "@ant-design/icons": "^5.4.0",
     "@linaria/core": "^6.0.0",
     "@linaria/react": "^6.0.0",

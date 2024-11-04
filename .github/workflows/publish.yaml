@@ -38,4 +38,4 @@ jobs:
       - run: git add readme.md
       - run: git commit --message 'update download url'
       - run: git pull
-      - run: git push origin master
+      - run: git push origin master --force

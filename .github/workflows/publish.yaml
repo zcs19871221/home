@@ -38,4 +38,4 @@ jobs:
       - run: git config --global user.name 'cszhang'
       - run: git config --global user.email 'mylifeholdon@gmail.com'
       - run: git commit --message 'update download url'
-      - run: git push
+      - run: git push origin HEAD:master

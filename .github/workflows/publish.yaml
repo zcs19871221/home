@@ -35,8 +35,8 @@ jobs:
           name: local-development-console
           path: release
       - run: |
-          echo 'url: ${{ steps.artifact-upload-step.outputs.artifact-url }}'
-          sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
+          sed -i 's,\[link\]([^)]*),[link](${{ steps.artifact-upload-step
+          .outputs.artifact-url }}),g' readme.md
           git add readme.md
           git config --global user.name 'cszhang'
           git config --global user.email 'mylifeholdon@gmail.com'

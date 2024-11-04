@@ -31,7 +31,7 @@ service status in real time by configuring log status monitoring.
 
 ## how to use
 
-1. download app from this [link](__artifact__).
+1. download app from this [link]().
 
 2. double click run.bat (currently only support windows if you need linux or mac
    version, please create issue). You can close this cmd console, the Console

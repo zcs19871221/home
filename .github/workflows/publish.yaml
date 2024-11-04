@@ -26,14 +26,15 @@ jobs:
           architecture: x64
       - name: Run the Maven package phase
         run: mvn --batch-mode --update-snapshots package
-      - run: cp target/home-1.0.0-exec.jar release
+      - run: cp target/local-development-console-1.0.0-exec.jar release
+      - run: cp h2db.mv.db release
+      - run: cp readme.md release
       - uses: actions/upload-artifact@v4
         with:
-          name: Package
+          name: local-development-console
           path: release
-
-#  build js
-#  mvn package
-#  move jar file to template file
-#  zip it
-#  add to github
+      - run: sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
+      - uses: actions4git/setup-git@v1
+      - run: git add readme.md
+      - run: git commit --message 'update download url'
+      - run: git push origin other-branch:master

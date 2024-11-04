@@ -33,3 +33,5 @@ build/
 .vscode/
 
 resources/templates/
+release/*.db
+release/*.jar

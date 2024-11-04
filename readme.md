@@ -1,86 +1,62 @@
-## findById vs getReferenceById
+# Local Development Console
 
-getReferenceById will throw error if not exists.
-findById will return a Optional<object>
+## Main Purpose
 
-普通的get/{id}请求最好用findById，如果为空就返回空值
+The front-end node service is based on cmd. You need to spend a lot of time to
+remember the command, open cmd, and input you command and enter.you can't
+restart it, you can only close it and reopen it.
 
-## 数据库迁移管理
+It's hard to find the error and info in logs, and they disappear after closing.
+And if you need to open multiple services at the same time, a lot of cmd panels
+will make you confused about which one is which, and it's a mess.
 
-# database first
+So this console controls these processes through the background java service,
+and you can easily control them on the browser without opening many cmd panels.
+And It provides many conveniences such as calling Vscode to locate errors, open
+folders, etc.
 
-维护sql文件，每一个sql文件唯一不能更改，只能append新的sql文件修改，文件以00000_detail.
-sql命名，保证顺序唯一。启动服务时候，liquibase自动同步sql文件到数据库。（包括测试库）
+## Intro
 
-这样保证：数据库修改来源唯一，可以追溯记录，可以回滚。
+You can use the Console to manage your local services or commands. It is mainly
+for front-end nodeJS services, but it can support any service or command that
+can be started through the cli.
 
-## 集成测试
+Through the console, you can easily control your lots of service and view the
+logs easily without open lots of cmd window and search the logs.
 
-1. 使用相同的数据库（以后换成testContainer）
-2. 启动时候同步数据库结构
-3. 每个测试时候在beforeEach时候清空对应表数据
+After adding your service, you can perform operations on this service,
+including: start, stop, restart, view logs, open the service directory through
+Vscode, highlight log errors, locate error addresses through Vscode, and display
+service status in real time by configuring log status monitoring.
 
-## dto最佳实践
+## how to use
 
-1. 每个接口应该有对应的dto，定义有语义的后缀而不是Dto后缀（Request，Response），create和update的request
-   payload可以考虑共用，把id放到path里。
-2. 不可变的：private final Type xxxx;
-3. 使用lombok的builder可以方便测试快速创建对象，但是要搭配@Jacksonized
-4. 嵌套的对象需要手动加valid验证
+1. download app from this [link](__artifact__).
 
-## entity最佳实践
+2. double click run.bat (currently only support windows if you need linux or mac
+   version, please create issue). You can close this cmd console, the Console
+   still running in background.
 
-1. 按需集成audit类，拥有创建时间，创建人，修改时间，修改人等属性
-2. 添加Version注解实现乐观锁
+3. visit **http://localhost:9981/**
 
-        @Version 
-        private Long version 
-3. 属性需要添加校验的注解（notBlank，size等），可以获取更清晰的错误信息。
-4. 时间类型设置为 `Instant`
-5. 映射关系的所有者在非`MappedBy`注解标注的表上，也就是在没有标注mappedBy
-   的实体上操作增加和删除，会同步更新连接表关系。如果要在mappedBy
-   的表上操作，必须查出所有拥有该实体的的实体列表，然后移除，保存后，关系会被删除，才能删除自己的实体。
+# Feature
 
-## MapStruct
+1. In the [Service] menu, you can create/edit/delete services through the add
+   icon in the right top and edit/delete icon in the operation column.
 
-1. 自定义转换方法
-   需要手动转换的，可以在接口里定义default方法，mapstruct会把这些方法的参数类型和目标类型对应到：源类的类型和目标类的类型去自动执行
+2. In the [Service] menu, you can click the icon in the description column to
+   perform the following operations on the service you configured:
+   start/stop/restart/view logs/clear logs/open directory with vscode.
 
-         default Set<Tag> TagIdToTags(Set<Integer> tags) {
-            Set<Tag> ans = new HashSet<>();
-            for (Integer tagId : tags) {
-            Tag tag = new Tag();
-            tag.setId(tagId);
-            ans.add(tag);
-            }
-            return ans;
-         }
+3. In the [Logstatus] menu, you can add/edit/del the log status and associate
+   them in the [Service] menu. After association, when the log matches the
+   matching rule you configured, the label name and color you configured will be
+   displayed in the service menu description column to show the current service
+   status.
 
-         default Set<Integer> TagsToTagId(Set<Tag> tags) {
-            Set<Integer> ans = new HashSet<>();
-            for (Tag tag : tags) {
-            ans.add(tag.getId());
-            }
-            return ans;
-         }
+4. You can stop the backend service by clicking the [Shutdown system] button in
+   the right top.
 
-2. 循环引用(circle dependency)解决：
-    1. 如果entity的manyToMany实体中mappedBy部分不需要额外的Set数据，去掉，从根本上解决问题。
-    2. 在同一个mapper中单独定义list中的类型映射，并设置ignore
-
-# jpa entityManger session JpaRepository关系
-
-jpa和entityManger是标准，session是hibernate对entityManger的实现，JpaRepository是spring
-对jpa的抽象
-
-# 时间，时区
-
-前端发送和接收的时间都是毫秒数。
-
-requestDto类型：Instant
-entity类型：Instant
-数据库列：timestamp
-responseDto类型：Instant
-
-jackson配置： write-dates-as-timestamps: true 默认时间类型转换成epocTime
-默认前端处理时区，时间戳，如果直接给前端时间字符的话，使用string类型，Instant根据目标时区转换成ZonedTime后再format。   
+5. You can change the language by clicking the selection in the right top.
+   It also based on my another
+   Tools: [automatic-i18n](https://www.npmjs.com/package/automatic-i18n)

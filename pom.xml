@@ -10,10 +10,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.cs</groupId>
-    <artifactId>home</artifactId>
+    <artifactId>local-development-console</artifactId>
     <version>1.0.0</version>
-    <name>home</name>
-    <description>home</description>
+    <name>local-development-console</name>
+    <description>local-development-console</description>
     <properties>
         <java.version>17</java.version>
         <querydsl.version>5.0.0</querydsl.version>

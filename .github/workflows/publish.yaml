@@ -35,5 +35,7 @@ jobs:
           path: release
       - run: sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
       - run: git add readme.md
+      - run: git config --global user.name 'cszhang'
+      - run: git config --global user.email 'mylifeholdon@gmail.com'
       - run: git commit --message 'update download url'
       - run: git push

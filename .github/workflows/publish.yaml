@@ -35,6 +35,7 @@ jobs:
           name: local-development-console
           path: release
       - run: |
+          echo 'url: ${{ steps.artifact-upload-step.outputs.artifact-url }}'
           sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
           git add readme.md
           git config --global user.name 'cszhang'

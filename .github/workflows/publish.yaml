@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -24,18 +24,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           architecture: x64
-      - name: Run the Maven package phase
-        run: mvn --batch-mode --update-snapshots package
-      - run: cp target/local-development-console-1.0.0-exec.jar release
-      - run: cp h2db.mv.db release
-      - run: cp readme.md release
+      - run: |
+          mvn --batch-mode --update-snapshots package
+          cp target/local-development-console-1.0.0-exec.jar release
+          cp h2db.mv.db release
+          cp readme.md release
       - uses: actions/upload-artifact@v4
         with:
           name: local-development-console
           path: release
-      - run: sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
-      - run: git add readme.md
-      - run: git config --global user.name 'cszhang'
-      - run: git config --global user.email 'mylifeholdon@gmail.com'
-      - run: git commit --message 'update download url'
-      - run: git push origin HEAD:master
+      - run: |
+          sed -i 's/__artifact__/${{ steps.artifact-upload-step.outputs.artifact-url }}/g' readme.md
+          git add readme.md
+          git config --global user.name 'cszhang'
+          git config --global user.email 'mylifeholdon@gmail.com'
+          git commit --message 'update download url'
+          git push origin HEAD:master

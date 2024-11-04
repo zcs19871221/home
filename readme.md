@@ -3,7 +3,7 @@
 ## Main Purpose
 
 The front-end node service is based on cmd. You need to spend a lot of time to
-remember the command, open cmd, and input you command and enter.you can't
+remember the command, open cmd, and input you command and enter. You can't
 restart it, you can only close it and reopen it.
 
 It's hard to find the error and info in logs, and they disappear after closing.
@@ -18,7 +18,7 @@ folders, etc.
 ## Intro
 
 You can use the Console to manage your local services or commands. It is mainly
-for front-end nodeJS services, but it can support any service or command that
+for front-end Node.js services, but it can support any service or command that
 can be started through the cli.
 
 Through the console, you can easily control your lots of service and view the
@@ -48,7 +48,7 @@ service status in real time by configuring log status monitoring.
    perform the following operations on the service you configured:
    start/stop/restart/view logs/clear logs/open directory with vscode.
 
-3. In the [Logstatus] menu, you can add/edit/del the log status and associate
+3. In the [Log status] menu, you can add/edit/del the log status and associate
    them in the [Service] menu. After association, when the log matches the
    matching rule you configured, the label name and color you configured will be
    displayed in the service menu description column to show the current service

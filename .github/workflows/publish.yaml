@@ -37,4 +37,4 @@ jobs:
       - uses: actions4git/setup-git@v1
       - run: git add readme.md
       - run: git commit --message 'update download url'
-      - run: git push origin other-branch:main --force
+      - run: git push origin head:main --force

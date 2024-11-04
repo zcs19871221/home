@@ -24,7 +24,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           architecture: x64
-      - name: Run the Maven verify phase
+      - name: Run the Maven package phase
         run: mvn --batch-mode --update-snapshots package
       - run: cp target/home-1.0.0-exec.jar release
       - uses: actions/upload-artifact@v4

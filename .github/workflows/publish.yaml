@@ -30,6 +30,7 @@ jobs:
           cp h2db.mv.db release
           cp readme.md release
       - uses: actions/upload-artifact@v4
+        id: artifact-upload-step
         with:
           name: local-development-console
           path: release

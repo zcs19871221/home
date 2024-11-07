@@ -61,13 +61,8 @@ export const App = () => {
             <div
               className="ml-auto cursor-pointer"
               onClick={() => {
-                jsonFetcher('/system/shutdown', 'PUT').then(() => {
-                  message.success(
-                    intl.formatMessage({
-                      id: 'BackendServiceClosedSuccessful_',
-                      defaultMessage: '后台服务关闭成功',
-                    })
-                  );
+                jsonFetcher('/system/shutdown', 'PUT').then((res) => {
+                  message.success(res);
                 });
               }}
             >
@@ -134,5 +129,5 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </LocaleProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

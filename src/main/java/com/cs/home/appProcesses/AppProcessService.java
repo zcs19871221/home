@@ -21,6 +21,8 @@ public interface AppProcessService {
 
     void delete(Integer processId) throws IOException;
 
+    void stopAll() throws IOException;
+
     List<AppProcessResponse> list() throws Exception;
 
     Map<Integer, RunningProcessResponse> runningProcesses() throws IOException;

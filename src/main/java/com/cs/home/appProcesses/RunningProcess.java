@@ -4,9 +4,12 @@ import com.cs.home.appProcessStatus.AppProcessStatusResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Set;
 
 
@@ -14,8 +17,11 @@ import java.util.Set;
 @Getter
 @Setter
 public class RunningProcess {
+    private static File pidFile = new File(System.getProperty("java.io" +
+            ".tmpdir"));
     private final FileInputStream fileInputStream;
     private final BufferedReader br;
+    private Logger logger = LoggerFactory.getLogger(RunningProcess.class);
     private Process process;
     private ProcessBuilder pb;
     private String label;
@@ -46,9 +52,14 @@ public class RunningProcess {
             newCommands[0] = "npm.cmd";
         }
         pb = new ProcessBuilder(newCommands);
+
         pb.directory(new File(cwd));
         pb.redirectErrorStream(true);
         pb.redirectOutput(log);
         process = pb.start();
+        logger.info("execute command: {} , pid is : {}", Arrays.toString(commands),
+                process.pid());
+
+
     }
 }

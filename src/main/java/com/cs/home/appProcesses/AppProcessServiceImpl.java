@@ -85,9 +85,12 @@ public class AppProcessServiceImpl implements AppProcessService {
         }
 
         RunningProcess runningProcess = idMapProcess.get(appProcessId);
+        Long pid = runningProcess.getProcess().pid();
         runningProcess.getProcess().descendants().forEach(ProcessHandle::destroy);
         runningProcess.getProcess().destroy();
         runningProcess.setRunning(false);
+        log.info("command: {}, pid: {}, stopped",
+                runningProcess.getPb().command().toString(), pid);
     }
 
     @Override
@@ -140,6 +143,13 @@ public class AppProcessServiceImpl implements AppProcessService {
     public void delete(Integer appProcessId) throws IOException {
         if (appProcessRepository.existsById(appProcessId)) {
             appProcessRepository.deleteById(appProcessId);
+        }
+    }
+
+    @Override
+    public void stopAll() throws IOException {
+        for (RunningProcess value : idMapProcess.values()) {
+            stop(value.getAppProcessId());
         }
     }
 

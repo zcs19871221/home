@@ -1,4 +1,6 @@
 logging:
+  file:
+    name: local-development-console.log
   level:
     org:
       springframework:

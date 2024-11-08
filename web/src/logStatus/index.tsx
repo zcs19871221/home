@@ -1,4 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import {
   Button,
   Checkbox,
@@ -30,7 +30,7 @@ import {
   StatusCreatedOrUpdated,
   StatusResponse,
 } from './types.ts';
-import { i18n } from '../i18n/index.tsx';
+import { AppFormattedMessage, i18n } from '../i18n/index.tsx';
 
 export const useStatusColumns = () => [
   {
@@ -114,7 +114,7 @@ export default function LogStatus() {
     <div>
       <div className="flex justify-center items-center h-8 ">
         <h2 className="mr-auto">
-          <FormattedMessage
+          <AppFormattedMessage
             id="LogStatusManagement"
             defaultMessage="日志状态管理"
           />
@@ -179,13 +179,13 @@ export default function LogStatus() {
                           onOk() {
                             jsonFetcher(
                               `${statusApiBase}/${row.id}`,
-                              'DELETE'
+                              'DELETE',
                             ).then(() => {
                               message.success(
                                 intl.formatMessage({
                                   id: 'DeletedSuccessfully',
                                   defaultMessage: '删除成功',
-                                })
+                                }),
                               );
                               mutate();
                             });
@@ -231,7 +231,7 @@ export default function LogStatus() {
                   intl.formatMessage({
                     id: 'OperationSuccessful',
                     defaultMessage: '操作成功',
-                  })
+                  }),
                 );
                 setShowForm(false);
                 mutate();
@@ -266,8 +266,8 @@ export default function LogStatus() {
                       intl.formatMessage({
                         id: 'NotAValidRegularExpression',
                         defaultMessage: '不是有效的正则表达式',
-                      })
-                    )
+                      }),
+                    ),
                   );
                 }
               },

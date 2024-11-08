@@ -3,6 +3,7 @@
  * You can only change variable's property and value.
  * Others will be clear after rerun automatic-i18n program.
  */
+// eslint-disable-next-line import/extensions
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {

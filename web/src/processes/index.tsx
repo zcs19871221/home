@@ -1,4 +1,4 @@
-import { useIntl, FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 import {
   AutoComplete,
   Button,
@@ -41,7 +41,7 @@ import {
   processesApiBase,
   ProcessesCreatedOrUpdated,
 } from './types.ts';
-import { i18n } from '../i18n/index.tsx';
+import { AppFormattedMessage, i18n } from '../i18n/index.tsx';
 import useDebouncedValue from '../common/useDebouncedValue.tsx';
 import safeParse from '../common/safeParse.ts';
 import { useStatusColumns } from '../logStatus/index.tsx';
@@ -351,7 +351,10 @@ export default function ProcessesComponent() {
     <div>
       <div className="flex justify-center items-center h-8">
         <h2 className="mr-auto">
-          <FormattedMessage id="ServiceManagement" defaultMessage="服务管理" />
+          <AppFormattedMessage
+            id="ServiceManagement"
+            defaultMessage="服务管理"
+          />
         </h2>
         <Tooltip
           title={intl.formatMessage({

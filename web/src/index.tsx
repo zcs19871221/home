@@ -1,4 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import { ConfigProvider, Layout, Menu, message, Select } from 'antd';
 import { CloudServerOutlined } from '@ant-design/icons';
 import React, { Suspense, lazy } from 'react';
@@ -10,7 +10,11 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Content, Header } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
 import { jsonFetcher } from './common/fetcher.tsx';
-import { LocaleProvider, useLocale } from './i18n/index.tsx';
+import {
+  AppFormattedMessage,
+  LocaleProvider,
+  useLocale,
+} from './i18n/index.tsx';
 import LogStatus from './logStatus/index.tsx';
 
 export type AvailableLocale = 'zh-CN' | 'en-US';
@@ -53,7 +57,7 @@ export const App = () => {
         <Layout style={{ minHeight: '100vh' }}>
           <Header className="text-white flex items-center">
             <div>
-              <FormattedMessage
+              <AppFormattedMessage
                 id="FrontendManagementSystem"
                 defaultMessage="前端管理系统"
               />
@@ -66,12 +70,15 @@ export const App = () => {
                 });
               }}
             >
-              <FormattedMessage id="ShutdownSystem" defaultMessage="关闭系统" />
+              <AppFormattedMessage
+                id="ShutdownSystem"
+                defaultMessage="关闭系统"
+              />
             </div>
             <Select onChange={setLocale} value={locale} className="ml-5 w-28">
               <Option value="en-us">English</Option>
               <Option value="zh-cn">
-                <FormattedMessage id="Chinese" defaultMessage="中文" />
+                <AppFormattedMessage id="Chinese" defaultMessage="中文" />
               </Option>
             </Select>
           </Header>
